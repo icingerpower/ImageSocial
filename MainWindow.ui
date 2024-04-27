@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>2091</width>
+    <width>2144</width>
     <height>1826</height>
    </rect>
   </property>
@@ -256,11 +256,25 @@
       <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QLineEdit" name="lineEditBaseName">
-          <property name="placeholderText">
-           <string>0001-midi-dress</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <item>
+           <widget class="QLineEdit" name="lineEditBaseName">
+            <property name="placeholderText">
+             <string>0001-midi-dress</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxBaseName"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonOpenBaseNameFolder">
+            <property name="text">
+             <string>Open</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -412,6 +426,16 @@
            <widget class="QPushButton" name="buttonEditVideo">
             <property name="text">
              <string>Edit Video</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonCreateProductPage">
+            <property name="toolTip">
+             <string>Create a directory with image copied ready for face swap and other processing</string>
+            </property>
+            <property name="text">
+             <string>Create product page</string>
             </property>
            </widget>
           </item>
@@ -590,7 +614,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>2091</width>
+     <width>2144</width>
      <height>20</height>
     </rect>
    </property>

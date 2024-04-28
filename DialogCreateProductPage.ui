@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>970</width>
-    <height>710</height>
+    <width>1042</width>
+    <height>990</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Create Product Page</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_4">
    <item>
@@ -37,6 +37,11 @@
        <item>
         <property name="text">
          <string>Edit page</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Crop For Ads</string>
         </property>
        </item>
        <item>
@@ -98,7 +103,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="buttonOpenTemporaryFolder">
+             <widget class="QPushButton" name="buttonOpenPageFolder">
               <property name="text">
                <string>Open</string>
               </property>
@@ -120,14 +125,14 @@
            </layout>
           </item>
           <item>
-           <widget class="QTreeView" name="treeViewFilesTemporary"/>
+           <widget class="QTreeView" name="treeViewFilesPage"/>
           </item>
          </layout>
         </widget>
        </widget>
        <widget class="QStackedWidget" name="stackedWidget">
         <property name="currentIndex">
-         <number>0</number>
+         <number>3</number>
         </property>
         <widget class="QWidget" name="pageAi">
          <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -135,13 +140,6 @@
            <widget class="QCommandLinkButton" name="buttonRunAis">
             <property name="text">
              <string>Run deep image and ChatGpt</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCommandLinkButton" name="buttonRunCropping">
-            <property name="text">
-             <string>Run cropping</string>
             </property>
            </widget>
           </item>
@@ -181,21 +179,21 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_6">
               <item>
-               <widget class="QPushButton" name="pushButton">
+               <widget class="QPushButton" name="buttonCopyLink">
                 <property name="text">
                  <string>Copy link</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_2">
+               <widget class="QPushButton" name="buttonAddLinkImage">
                 <property name="text">
                  <string>Add images link</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_3">
+               <widget class="QPushButton" name="buttonAddLinkReviews">
                 <property name="text">
                  <string>Add review link</string>
                 </property>
@@ -224,6 +222,99 @@
          </layout>
         </widget>
         <widget class="QWidget" name="pageProductPage"/>
+        <widget class="QWidget" name="pageCropAds">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_12">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_11">
+            <item>
+             <widget class="QScrollArea" name="scrollArea">
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>794</width>
+                 <height>569</height>
+                </rect>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_13">
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_8">
+                  <item>
+                   <widget class="QPushButton" name="buttonCropAll">
+                    <property name="text">
+                     <string>Auto crop all</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonCropPinterest">
+                    <property name="text">
+                     <string>Crop Pinterest</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonCropGoogleAds">
+                    <property name="text">
+                     <string>Crop Google Ads</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_6">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <widget class="QGraphicsView" name="graphicsView">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="pagePinterest">
          <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
@@ -356,8 +447,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>257</x>
+     <y>700</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -372,12 +463,28 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>325</x>
+     <y>700</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
      <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>listWidgetSteps</sender>
+   <signal>currentRowChanged(int)</signal>
+   <receiver>stackedWidget</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>113</x>
+     <y>291</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>226</x>
+     <y>327</y>
     </hint>
    </hints>
   </connection>

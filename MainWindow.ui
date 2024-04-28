@@ -265,14 +265,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="comboBoxBaseName"/>
-          </item>
-          <item>
-           <widget class="QPushButton" name="buttonOpenBaseNameFolder">
-            <property name="text">
-             <string>Open</string>
-            </property>
-           </widget>
+           <widget class="QComboBox" name="comboBoxPageDirs"/>
           </item>
          </layout>
         </item>

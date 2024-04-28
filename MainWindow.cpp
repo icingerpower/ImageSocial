@@ -9,6 +9,7 @@
 
 #include "../common/ffmpeg/FFmpegCommands.h"
 
+#include "DialogCreateProductPage.h"
 #include "DialogVideoEditor.h"
 #include "ResizableRect.h"
 #include "model/ImageDrawerAbstract.h"
@@ -201,6 +202,7 @@ void MainWindow::_setImageDirectory(const QString &dirPath)
         fileSystemModel = static_cast<QFileSystemModel *>(model);
         fileSystemModelTemp = static_cast<QFileSystemModel *>(modelTempFiles);
     }
+    _fillComboPageDirs();
 
     fileSystemModel->setRootPath(dirPath);
     ui->treeViewImages
@@ -455,6 +457,7 @@ void MainWindow::cropSquare()
         }
         QString filePath = _nextFilePath(QString());
         pixmap.save(filePath);
+        _addCurrentComboPageDir();
         _setRectVisible(true);
     }
 }
@@ -639,6 +642,36 @@ void MainWindow::editVideo()
     }
 }
 //----------------------------------------
+void MainWindow::createProductPage()
+{
+    QString baseName = ui->lineEditBaseName->text();
+    if (baseName.isEmpty())
+    {
+        baseName = ui->comboBoxPageDirs->currentText();
+    }
+    if (baseName.isEmpty())
+    {
+        QMessageBox::information(
+                    this, "No base name", "You need to enter a base name");
+        return;
+    }
+    QDir dirImages = ui->lineEditDirImages->text();
+    QDir dirPage = dirImages.filePath(baseName);
+    if (!dirPage.exists())
+    {
+        dirPage.mkpath(".");
+        const auto &fileInfos = dirImages.entryInfoList(
+                    QStringList{baseName + "*.jpg"}, QDir::Files, QDir::Name);
+        for (const auto &fileInfo : fileInfos)
+        {
+            const QString &filePathTo = dirPage.filePath(fileInfo.fileName());
+            QFile::copy(fileInfo.absoluteFilePath(), filePathTo);
+        }
+    }
+    DialogCreateProductPage dialog(dirPage.path());
+    dialog.exec();
+}
+//----------------------------------------
 void MainWindow::_setRectVisible(bool visible)
 {
     m_rectSquare->setVisible(visible);
@@ -767,7 +800,8 @@ void MainWindow::onImageSelectionChangedToCrop(
         const QItemSelection &selected,
         const QItemSelection &deselected)
 {
-     if (selected.size() > 0) {
+     if (selected.size() > 0)
+     {
         QDir imageDir = ui->lineEditDirImagesToCrop->text();
         QString imageFileName = selected.indexes().first().data().toString();
         QString imageFilePath = imageDir.filePath(imageFileName);
@@ -835,6 +869,10 @@ void MainWindow::_connectSlots()
             &QCheckBox::clicked,
             this,
             &MainWindow::editVideo);
+    connect(ui->buttonCreateProductPage,
+            &QCheckBox::clicked,
+            this,
+            &MainWindow::createProductPage);
     connect(m_webView,
             &QWebEngineView::loadFinished,
             this,
@@ -903,5 +941,39 @@ void MainWindow::_connectSlots()
             [this](bool clicked) {
         m_rectPinterest->setVisible(clicked);
     });
+}
+//----------------------------------------
+void MainWindow::_fillComboPageDirs()
+{
+    QDir imageDir = ui->lineEditDirImages->text();
+    const auto &fileInfos = imageDir.entryInfoList(
+                QStringList{"*.jpg"}, QDir::Files, QDir::Name);
+    QSet<QString> baseNamesSet;
+    for (const auto &fileInfo : fileInfos)
+    {
+        const QString &fileName = fileInfo.fileName();
+        int index = fileName.lastIndexOf("-");
+        baseNamesSet << fileName.left(index);
+    }
+    QStringList baseNames{baseNamesSet.begin(), baseNamesSet.end()};
+    std::sort(baseNames.begin(), baseNames.end(), std::greater<QString>());
+    baseNames.insert(0, "");
+    ui->comboBoxPageDirs->clear();
+    ui->comboBoxPageDirs->addItems(baseNames);
+}
+//----------------------------------------
+void MainWindow::_addCurrentComboPageDir()
+{
+    int nItems = ui->comboBoxPageDirs->count();
+    QSet<QString> items;
+    for (int i=0; i<nItems; ++i)
+    {
+        items << ui->comboBoxPageDirs->itemText(i);
+    }
+    const QString &baseName = ui->lineEditBaseName->text();
+    if (!items.contains(baseName))
+    {
+        ui->comboBoxPageDirs->insertItem(1, baseName);
+    }
 }
 //----------------------------------------

@@ -45,6 +45,7 @@ public slots:
     void createSlideShowVideo();
     void saveWithBorder();
     void editVideo();
+    void createProductPage();
 
 protected slots:
     void resizeEvent(QResizeEvent *event) override;
@@ -72,6 +73,8 @@ private:
     QGraphicsScene m_scene;
     QGraphicsScene m_sceneToCrop;
     void _connectSlots();
+    void _fillComboPageDirs();
+    void _addCurrentComboPageDir();
     void _setRectVisible(bool visible);
     bool _confirmPatternName();
     bool _confirmPatternNameAndWebPage();

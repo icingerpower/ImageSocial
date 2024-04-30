@@ -295,7 +295,8 @@ void DialogVideoEditor::resizeEvent(QResizeEvent *event)
 void DialogVideoEditor::setVisible(bool visible)
 {
     QDialog::setVisible(visible);
-    if (visible) {
+    if (visible)
+    {
         _resize();
     }
 }

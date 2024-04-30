@@ -132,7 +132,7 @@
        </widget>
        <widget class="QStackedWidget" name="stackedWidget">
         <property name="currentIndex">
-         <number>3</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="pageAi">
          <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -142,6 +142,30 @@
              <string>Run deep image and ChatGpt</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <layout class="QFormLayout" name="formLayout_2">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>Deep image API key</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>ChatGpt API key</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="lineEditDeepImageApitKey"/>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="lineEditChatGptApiKey"/>
+            </item>
+           </layout>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -181,21 +205,28 @@
               <item>
                <widget class="QPushButton" name="buttonCopyLink">
                 <property name="text">
-                 <string>Copy link</string>
+                 <string>Copy Link</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="buttonAddLinkImage">
                 <property name="text">
-                 <string>Add images link</string>
+                 <string>Add Images Link</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="buttonAddLinkReviews">
                 <property name="text">
-                 <string>Add review link</string>
+                 <string>Add Review Link</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonRemoveLink">
+                <property name="text">
+                 <string>Remove Link</string>
                 </property>
                </widget>
               </item>
@@ -215,7 +246,17 @@
              </layout>
             </item>
             <item>
-             <widget class="QListView" name="listViewPageInfos"/>
+             <widget class="QTableView" name="tableViewPageInfos">
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <attribute name="horizontalHeaderStretchLastSection">
+               <bool>true</bool>
+              </attribute>
+              <attribute name="verticalHeaderStretchLastSection">
+               <bool>false</bool>
+              </attribute>
+             </widget>
             </item>
            </layout>
           </item>
@@ -249,7 +290,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>794</width>
-                 <height>569</height>
+                 <height>499</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_13">

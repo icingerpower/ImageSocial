@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     DialogCreateProductPage.cpp \
+    DialogReplace.cpp \
     DialogVideoEditor.cpp \
     ResizableRect.cpp \
     main.cpp \
@@ -17,17 +18,20 @@ SOURCES += \
 
 HEADERS += \
     DialogCreateProductPage.h \
+    DialogReplace.h \
     DialogVideoEditor.h \
     MainWindow.h \
     ResizableRect.h
 
 FORMS += \
     DialogCreateProductPage.ui \
+    DialogReplace.ui \
     DialogVideoEditor.ui \
     MainWindow.ui
 
 include(model/model.pri)
 include(../common/ffmpeg/ffmpeg.pri)
+include(../common/types/types.pri)
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

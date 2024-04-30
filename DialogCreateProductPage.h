@@ -29,6 +29,12 @@ public slots:
     void runAi();
     void replaceInAiText();
 
+    // Tab informations
+    void copyLink();
+    void addLinkPhotos();
+    void addLinkReviews();
+    void removeLink();
+
     // Tab crop ads
     void cropAll();
     void cropPinterest();
@@ -48,6 +54,7 @@ private:
     void _initWebView();
     void _initFileTrees();
     void _initGraphicsView();
+    void _loadSettings();
     void _connectSlots();
     void _runAiChatGpt();
     void _runAiDeepImage();

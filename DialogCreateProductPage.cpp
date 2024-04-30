@@ -1,3 +1,6 @@
+#include <QSettings>
+#include <QApplication>
+#include <QClipboard>
 #include <QMessageBox>
 #include <QFileSystemModel>
 #include <QDesktopServices>
@@ -6,11 +9,16 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 
+#include "model/PageInfoList.h"
 #include "ResizableRect.h"
+#include "DialogReplace.h"
 
 #include "DialogCreateProductPage.h"
 #include "ui_DialogCreateProductPage.h"
 
+static const QString SETTINGS_API_KEY_PINTEREST{"apiKeyPinterest"};
+static const QString SETTINGS_API_KEY_DEEP_IMAGE{"apiKeyDeepImage"};
+static const QString SETTINGS_API_KEY_CHAT_GPT{"apiKeyChatGpt"};
 //----------------------------------------
 DialogCreateProductPage::DialogCreateProductPage(
         const QString &pagePath, QWidget *parent)
@@ -22,6 +30,9 @@ DialogCreateProductPage::DialogCreateProductPage(
     _initFileTrees();
     _initWebView();
     _initGraphicsView();
+    auto model = new PageInfoList{pagePath, ui->tableViewPageInfos};
+    ui->tableViewPageInfos->setModel(model);
+    _loadSettings();
     _connectSlots();
     m_aiWasRun = false;
 }
@@ -82,6 +93,17 @@ void DialogCreateProductPage::_initGraphicsView()
     m_scene.addItem(m_rectVertical);
 }
 //----------------------------------------
+void DialogCreateProductPage::_loadSettings()
+{
+    QSettings settings;
+    QString apiKeyPinterest = settings.value(SETTINGS_API_KEY_PINTEREST, QString{}).toString();
+    ui->lineEditPinterestApiKey->setText(apiKeyPinterest);
+    QString apiKeyDeepImage = settings.value(SETTINGS_API_KEY_DEEP_IMAGE, QString{}).toString();
+    ui->lineEditDeepImageApitKey->setText(apiKeyDeepImage);
+    QString apiKeyChatGpt = settings.value(SETTINGS_API_KEY_CHAT_GPT, QString{}).toString();
+    ui->lineEditChatGptApiKey->setText(apiKeyChatGpt);
+}
+//----------------------------------------
 void DialogCreateProductPage::onImageSelectionChanged(
         const QItemSelection &selected, const QItemSelection &deselected)
 {
@@ -118,6 +140,22 @@ void DialogCreateProductPage::_connectSlots()
             &QPushButton::clicked,
             this,
             &DialogCreateProductPage::replaceInAiText);
+    connect(ui->buttonCopyLink,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copyLink);
+    connect(ui->buttonAddLinkImage,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::addLinkPhotos);
+    connect(ui->buttonAddLinkReviews,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::addLinkReviews);
+    connect(ui->buttonRemoveLink,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::removeLink);
     connect(ui->treeViewFilesPage->selectionModel(),
             &QItemSelectionModel::selectionChanged,
             this,
@@ -134,6 +172,27 @@ void DialogCreateProductPage::_connectSlots()
             &QPushButton::clicked,
             this,
             &DialogCreateProductPage::cropGoogleImageAds);
+    connect(ui->lineEditDeepImageApitKey,
+            &QLineEdit::textEdited,
+            this,
+            [](const QString &apiKey){
+                QSettings settings;
+                settings.setValue(SETTINGS_API_KEY_DEEP_IMAGE, apiKey);
+            });
+    connect(ui->lineEditPinterestApiKey,
+            &QLineEdit::textEdited,
+            this,
+            [](const QString &apiKey){
+                QSettings settings;
+                settings.setValue(SETTINGS_API_KEY_PINTEREST, apiKey);
+            });
+    connect(ui->lineEditChatGptApiKey,
+            &QLineEdit::textEdited,
+            this,
+            [](const QString &apiKey){
+                QSettings settings;
+                settings.setValue(SETTINGS_API_KEY_CHAT_GPT, apiKey);
+            });
 }
 //----------------------------------------
 void DialogCreateProductPage::openPageFolder()
@@ -162,6 +221,45 @@ void DialogCreateProductPage::runAi()
 //----------------------------------------
 void DialogCreateProductPage::replaceInAiText()
 {
+    DialogReplace dialog;
+    dialog.exec();
+    if (dialog.wasAccepted())
+    {
+        //TODO
+    }
+}
+//----------------------------------------
+void DialogCreateProductPage::copyLink()
+{
+    auto selIndexes = ui->tableViewPageInfos->selectionModel()->selectedIndexes();
+    if (selIndexes.size() > 0)
+    {
+        auto model = static_cast<PageInfoList *>(ui->tableViewPageInfos->model());
+        auto clipboard = QApplication::clipboard();
+        clipboard->setText(model->getLink(selIndexes.first()));
+    }
+}
+//----------------------------------------
+void DialogCreateProductPage::addLinkPhotos()
+{
+    auto model = static_cast<PageInfoList *>(ui->tableViewPageInfos->model());
+    model->addLinkPhotos();
+}
+//----------------------------------------
+void DialogCreateProductPage::addLinkReviews()
+{
+    auto model = static_cast<PageInfoList *>(ui->tableViewPageInfos->model());
+    model->addLinkReviews();
+}
+//----------------------------------------
+void DialogCreateProductPage::removeLink()
+{
+    auto selIndexes = ui->tableViewPageInfos->selectionModel()->selectedIndexes();
+    if (selIndexes.size() > 0)
+    {
+        auto model = static_cast<PageInfoList *>(ui->tableViewPageInfos->model());
+        model->remove(selIndexes.first());
+    }
 }
 //----------------------------------------
 void DialogCreateProductPage::_runAiDeepImage()

@@ -1,5 +1,6 @@
-#include <QSettings>
 #include <QApplication>
+#include <QProcess>
+#include <QFile>
 #include <QClipboard>
 #include <QMessageBox>
 #include <QFileSystemModel>
@@ -9,14 +10,19 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 
+#include "../common/config/SettingsManager.h"
+
 #include "model/PageInfoList.h"
+#include "model/PlannifyListModel.h"
 #include "ResizableRect.h"
 #include "DialogReplace.h"
 
 #include "DialogCreateProductPage.h"
 #include "ui_DialogCreateProductPage.h"
 
-static const QString SETTINGS_API_KEY_PINTEREST{"apiKeyPinterest"};
+static const QString SETTINGS_API_PINTEREST_ID{"apiPinterestId"};
+static const QString SETTINGS_API_PINTEREST_SECRET{"apiPinterestSecret"};
+static const QString SETTINGS_API_PINTEREST_ACCESS_TOKEN{"apiPinterestToken"};
 static const QString SETTINGS_API_KEY_DEEP_IMAGE{"apiKeyDeepImage"};
 static const QString SETTINGS_API_KEY_CHAT_GPT{"apiKeyChatGpt"};
 //----------------------------------------
@@ -32,6 +38,7 @@ DialogCreateProductPage::DialogCreateProductPage(
     _initGraphicsView();
     auto model = new PageInfoList{pagePath, ui->tableViewPageInfos};
     ui->tableViewPageInfos->setModel(model);
+    ui->listViewPinteresPlanned->setModel(PlannifyListModel::instance());
     _loadSettings();
     _connectSlots();
     m_aiWasRun = false;
@@ -48,9 +55,7 @@ void DialogCreateProductPage::_initWebView()
     static QWebEngineView webEngineView;
     webEngineView.setParent(nullptr);
     m_webView = &webEngineView;
-    auto layout = new QVBoxLayout(ui->pageProductPage);
-    layout->addWidget(m_webView);
-    ui->pageProductPage->setLayout(layout);
+    ui->pageProductPage->layout()->addWidget(m_webView);
     QUrl urlAddPage("https://pradize.commercehq.com/admin/products/create");
     m_webView->load(urlAddPage);
 }
@@ -95,12 +100,16 @@ void DialogCreateProductPage::_initGraphicsView()
 //----------------------------------------
 void DialogCreateProductPage::_loadSettings()
 {
-    QSettings settings;
-    QString apiKeyPinterest = settings.value(SETTINGS_API_KEY_PINTEREST, QString{}).toString();
-    ui->lineEditPinterestApiKey->setText(apiKeyPinterest);
-    QString apiKeyDeepImage = settings.value(SETTINGS_API_KEY_DEEP_IMAGE, QString{}).toString();
+    auto settings = SettingsManager::instance()->getSettings();
+    QString apiPinterestId = settings->value(SETTINGS_API_PINTEREST_ID, QString{}).toString();
+    ui->lineEditPinterestApiId->setText(apiPinterestId);
+    QString apiPinterestSecret = settings->value(SETTINGS_API_PINTEREST_SECRET, QString{}).toString();
+    ui->lineEditPinterestApiSecret->setText(apiPinterestSecret);
+    QString apiPinterestAccessToken = settings->value(SETTINGS_API_PINTEREST_ACCESS_TOKEN, QString{}).toString();
+    ui->lineEditPinterestAccessToken->setText(apiPinterestAccessToken);
+    QString apiKeyDeepImage = settings->value(SETTINGS_API_KEY_DEEP_IMAGE, QString{}).toString();
     ui->lineEditDeepImageApitKey->setText(apiKeyDeepImage);
-    QString apiKeyChatGpt = settings.value(SETTINGS_API_KEY_CHAT_GPT, QString{}).toString();
+    QString apiKeyChatGpt = settings->value(SETTINGS_API_KEY_CHAT_GPT, QString{}).toString();
     ui->lineEditChatGptApiKey->setText(apiKeyChatGpt);
 }
 //----------------------------------------
@@ -172,26 +181,48 @@ void DialogCreateProductPage::_connectSlots()
             &QPushButton::clicked,
             this,
             &DialogCreateProductPage::cropGoogleImageAds);
+    connect(ui->buttonPinterestPublish,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::publishPinterest);
+    connect(ui->buttonPinterestPlan,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::planifyPinterest);
     connect(ui->lineEditDeepImageApitKey,
             &QLineEdit::textEdited,
             this,
             [](const QString &apiKey){
-                QSettings settings;
-                settings.setValue(SETTINGS_API_KEY_DEEP_IMAGE, apiKey);
+                auto settings = SettingsManager::instance()->getSettings();
+                settings->setValue(SETTINGS_API_KEY_DEEP_IMAGE, apiKey);
             });
-    connect(ui->lineEditPinterestApiKey,
+    connect(ui->lineEditPinterestApiId,
             &QLineEdit::textEdited,
             this,
-            [](const QString &apiKey){
-                QSettings settings;
-                settings.setValue(SETTINGS_API_KEY_PINTEREST, apiKey);
+            [](const QString &value){
+                auto settings = SettingsManager::instance()->getSettings();
+                settings->setValue(SETTINGS_API_PINTEREST_ID, value);
+            });
+    connect(ui->lineEditPinterestApiSecret,
+            &QLineEdit::textEdited,
+            this,
+            [](const QString &value){
+                auto settings = SettingsManager::instance()->getSettings();
+                settings->setValue(SETTINGS_API_PINTEREST_SECRET, value);
+            });
+    connect(ui->lineEditPinterestAccessToken,
+            &QLineEdit::textEdited,
+            this,
+            [](const QString &value){
+                auto settings = SettingsManager::instance()->getSettings();
+                settings->setValue(SETTINGS_API_PINTEREST_ACCESS_TOKEN, value);
             });
     connect(ui->lineEditChatGptApiKey,
             &QLineEdit::textEdited,
             this,
             [](const QString &apiKey){
-                QSettings settings;
-                settings.setValue(SETTINGS_API_KEY_CHAT_GPT, apiKey);
+                auto settings = SettingsManager::instance()->getSettings();
+                settings->setValue(SETTINGS_API_KEY_CHAT_GPT, apiKey);
             });
 }
 //----------------------------------------
@@ -216,7 +247,7 @@ void DialogCreateProductPage::runAi()
     }
     m_aiWasRun = true;
     _runAiChatGpt();
-    _runAiDeepImage();
+    //_runAiDeepImage();
 }
 //----------------------------------------
 void DialogCreateProductPage::replaceInAiText()
@@ -266,23 +297,129 @@ void DialogCreateProductPage::_runAiDeepImage()
 {
     const auto &imageFilePaths = m_pagePath.entryInfoList(
                 QStringList{"*.jpg"}, QDir::Files, QDir::Name);
-    for (const auto &imageFilePath : imageFilePaths)
+    const QString &apiKey = ui->lineEditDeepImageApitKey->text();
+    //static const QUrl apiUrl("https://api.deep-image.ai/");
+    static const QString apiUrl("https://api.deep-image.ai/");
+    for (const auto &imageFileInfo : qAsConst(imageFilePaths))
     {
-        const auto &filePath = imageFilePath.absoluteFilePath();
-        QFile file(filePath);
-        if (file.open(QIODevice::ReadOnly))
-        {
-            QUrl apiUrl("https://deep-image.ai/api/increase/deep-image-x3");
-            QNetworkRequest request(apiUrl);
-            request.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
+        const auto &imageFilePath = imageFileInfo.absoluteFilePath();
+        //QString curlCommand = QString("curl -X POST -F \"api_key=" + apiKey + "\" -F \"image=" + imageFileInfo.fileName() + "\" " + apiUrl);
+        QString programCurl{"curl"};
 
-            // Send the image file to the API for processing
-            QNetworkReply *reply = m_networkAccessManager.post(request, file.readAll());
-            reply->setProperty("filePath", filePath);
+        QStringList arguments;
+        arguments << "--request";
+        arguments << "POST";
+        arguments << "--url";
+        arguments << "https://deep-image.ai/rest_api/process_result";
+        arguments << "--header";
+        arguments << "x-api-key:" + apiKey;
+        arguments << "--header";
+        arguments << "content-type:application/json";
+        arguments << "--data";
+        arguments << "{\"height\": \"1920\", \"url\": \"" + imageFileInfo.fileName() + "\"}";
+                              /*
+        QStringList arguments{"-X"
+                              , "api_key=" + apiKey
+                              , "-F"
+                              , "image=" + imageFileInfo.fileName()
+                              , apiUrl};
+                                                //*/
+
+        qDebug() << "DEEP AI curl" << arguments.join(" ");
+        QProcess process;
+        process.setWorkingDirectory(m_pagePath.path());
+        process.start(programCurl, arguments);
+        process.waitForFinished();
+
+        QByteArray response = process.readAllStandardOutput();
+        qDebug() << "DEEP AI reply:" << response;
+        QJsonDocument jsonDoc = QJsonDocument::fromJson(response);
+        QJsonObject jsonObj = jsonDoc.object();
+        QString resultImageUrl = jsonObj["url"].toString();
+
+        // Download the result image
+        //QString downloadCommand = QString("curl %1 -o %2").arg(resultImageUrl).arg(imageFilePath);
+        QStringList arguments2{resultImageUrl, "-o", imageFilePath};
+
+        process.start(programCurl, arguments2);
+        process.waitForFinished();
+
+        if (process.exitCode() != 0)
+        {
+            qWarning() << "Error downloading image from Deep Image API for file" << imageFilePath;
         }
+        /*
+        QFile* file = new QFile(imageFilePath);
+        if (file->open(QIODevice::ReadOnly))
+        {
+
+            QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+
+            QHttpPart imagePart;
+            imagePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("image/jpeg"));
+            imagePart.setHeader(
+                        QNetworkRequest::ContentDispositionHeader,
+                        QVariant("form-data; name=\"image\"; filename=\"" + file->fileName() + "\""));
+            imagePart.setBodyDevice(file);
+            file->setParent(multiPart); // we cannot delete the file now, so delete it with the multiPart
+
+            QHttpPart apiKeyPart;
+            apiKeyPart.setHeader(
+                        QNetworkRequest::ContentDispositionHeader,
+                        QVariant("form-data; name=\"api_key\""));
+            apiKeyPart.setBody(apiKey.toUtf8());
+
+            multiPart->append(apiKeyPart);
+            multiPart->append(imagePart);
+
+            QNetworkRequest request(apiUrl);
+            QNetworkReply *reply = m_networkAccessManager.post(request, multiPart);
+            multiPart->setParent(reply); // Delete the multiPart with the reply
+
+            // Handle reply asynchronously
+            connect(reply, &QNetworkReply::finished, this, [this, reply, imageFilePath]()
+            {
+                if (reply->error() == QNetworkReply::NoError)
+                {
+                    QByteArray response = reply->readAll();
+                    // Parse JSON and download the result image URL
+                    QJsonDocument doc = QJsonDocument::fromJson(response);
+                    QJsonObject obj = doc.object();
+                    QString resultImageUrl = obj["url"].toString();
+
+                    // Download and replace the image file
+                    QNetworkReply *downloadReply = m_networkAccessManager.get(
+                                QNetworkRequest(QUrl(resultImageUrl)));
+                    connect(downloadReply, &QNetworkReply::finished, this, [downloadReply, imageFilePath]()
+                    {
+                        if (downloadReply->error() == QNetworkReply::NoError)
+                        {
+                            QFile outFile(imageFilePath);
+                            if (outFile.open(QIODevice::WriteOnly))
+                            {
+                                outFile.write(downloadReply->readAll());
+                                outFile.close();
+                            }
+                        }
+                        else
+                        {
+                            qWarning() << "Deep image API error on retrieving image " << imageFilePath << downloadReply->errorString();;
+                        }
+                        downloadReply->deleteLater();
+                    });
+                }
+                else
+                {
+                     qWarning() << "Deep image API error on sending image " << imageFilePath << reply->errorString();;
+                }
+                reply->deleteLater();
+            });
+        }
+        //*/
     }
 }
 //----------------------------------------
+/*
 void DialogCreateProductPage::_replyDeepAi(QNetworkReply *reply)
 {
     if (reply->error() == QNetworkReply::NoError) {
@@ -292,11 +429,14 @@ void DialogCreateProductPage::_replyDeepAi(QNetworkReply *reply)
 
         // Replace the original file with the processed image
         QFile file(filePath);
-        if (file.open(QIODevice::WriteOnly)) {
+        if (file.open(QIODevice::WriteOnly))
+        {
             file.write(imageData);
             file.close();
             qDebug() << "Processed image saved to:" << filePath;
-        } else {
+        }
+        else
+        {
             qWarning() << "Failed to write processed image to file:" << filePath;
         }
     } else {
@@ -305,6 +445,7 @@ void DialogCreateProductPage::_replyDeepAi(QNetworkReply *reply)
 
     reply->deleteLater();
 }
+//*/
 //----------------------------------------
 void DialogCreateProductPage::_runAiChatGpt()
 {
@@ -312,19 +453,78 @@ void DialogCreateProductPage::_runAiChatGpt()
                 QStringList{"*.jpg"}, QDir::Files, QDir::Name);
     if (imageFilePaths.size() > 0)
     {
-        const auto &firstImageFilePath = imageFilePaths[0];
+        const auto &firstImageFileName = imageFilePaths[0].fileName();
         QUrl url("https://api.openai.com/v1/chat/completions");
+        QString programCurl{"curl"};
+        const QString &apiKey = ui->lineEditChatGptApiKey->text();
+
+        QStringList arguments;
+        arguments << "https://api.openai.com/v1/chat/completions";
+        arguments << "-H";
+        arguments << "Content-Type:application/json";
+        arguments << "-H";
+        arguments << "Authorization: Bearer " + apiKey;
+        arguments << "-d";
+        /*
+        arguments << "'{\"model\":\"gpt-3.5-turbo\","
+                     "\"messages\":["
+      "{"
+        "\"role\": \"system\","
+        "\"content\": \"You are a pinterest assistant, skilled in writting pinterest pin description.\""
+      "},"
+      "{"
+        "\"role\": \"user\","
+        "\"content\": \"Compose a pinterest description of a black elegant midi dress with sleeves.\""
+      "}"
+                     "]}'";
+                     //*/
+        QString jsonPayload = R"({"model":"gpt-4-turbo",
+                                 "messages":[
+                                    {"role": "system",
+                                     "content": "You are a Pinterest assistant, skilled in writing Pinterest pin descriptions including always the most searched keywords."
+                                    },
+                                    {"role": "user",
+                                    "content": [
+                                    {
+                                        "type": "text",
+                                        "text": "For the attached product, provide me a pinterest pin title + description that includes keywords people may use to search such product (without hashtags, and adding as much relevant keywords as possible). Don't make it longer that allowed by pinterest."
+                                    },
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": "%1"
+                                        }
+                                    }
+                                    ]
+                                    }
+                                 ]})";
+        jsonPayload.replace("%1", firstImageFileName);
+
+        arguments << jsonPayload;
+        qDebug() << "ChatGpt curl" << arguments.join(" ");
+        QProcess process;
+        process.setWorkingDirectory(m_pagePath.path());
+        process.start(programCurl, arguments);
+        process.waitForFinished();
+
+        QByteArray response = process.readAllStandardOutput();
+        qDebug() << "ChatGpt reply:" << response;
+
+        /*
         QNetworkRequest request(url);
 
-        request.setRawHeader("Authorization", "Bearer YOUR_API_KEY_HERE");
+        const QString &apiKey = ui->lineEditChatGptApiKey->text();
+        request.setRawHeader("Content-Type", QString{"application/json"}.toUtf8());
+        request.setRawHeader("Authorization", QString{"Bearer " + apiKey}.toUtf8());
         QHttpMultiPart* multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
 
         QHttpPart jsonPart;
         jsonPart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/json; charset=UTF-8"));
         QJsonObject json;
-        json.insert("model", "Fashion Keywords");  // Assuming this is the identifier for your custom model
-        json.insert("prompt", "Please describe the attached image.");
-        json.insert("max_tokens", 30);
+        json.insert("model", "gpt-4-turbo");  // Assuming this is the identifier for your custom model
+        //json.insert("model", "asst_TW5WLdGxRgrPQkufQrULDGBX");  // Assuming this is the identifier for your custom model
+        json.insert("prompt", "For the attached product, provide me a pinterest pin title + description that includes keywords people may use to search such product (without hashtags, and adding as much relevant keywords as possible). Don't make it longer that allowed by pinterest.");
+        json.insert("max_tokens", 8000);
         jsonPart.setBody(QJsonDocument(json).toJson());
         multiPart->append(jsonPart);
 
@@ -341,22 +541,21 @@ void DialogCreateProductPage::_runAiChatGpt()
 
         QNetworkReply* reply = m_networkAccessManager.post(request, multiPart);
         multiPart->setParent(reply);
+        connect(reply, &QNetworkReply::finished, this, [this, reply]()
+        {
+            if (reply->error() == QNetworkReply::NoError) {
+                QByteArray response_data = reply->readAll();
+                QJsonDocument doc = QJsonDocument::fromJson(response_data);
+                QJsonObject obj = doc.object();
+                qDebug() << "ChatGpt4 Response:" << obj;
+                ui->textEditChatGpt->setText("OK"); // TODO
+            } else {
+                qDebug() << "ChatGpt Error:" << reply->errorString();
+            }
+            reply->deleteLater();
+        });
+        //*/
     }
-}
-//----------------------------------------
-void DialogCreateProductPage::_replyChaptGpt4(QNetworkReply *reply)
-{
-    if (reply->error() == QNetworkReply::NoError) {
-        QByteArray response_data = reply->readAll();
-        QJsonDocument doc = QJsonDocument::fromJson(response_data);
-        QJsonObject obj = doc.object();
-        qDebug() << "ChatGpt4 Response:" << obj;
-        ui->textEditChatGpt->setText("OK");
-        // Handle the response object here
-    } else {
-        qDebug() << "Error:" << reply->errorString();
-    }
-    reply->deleteLater();
 }
 //----------------------------------------
 void DialogCreateProductPage::cropAll()
@@ -410,5 +609,179 @@ void DialogCreateProductPage::cropPinterest()
 //----------------------------------------
 void DialogCreateProductPage::cropGoogleImageAds()
 {
+}
+//----------------------------------------
+void DialogCreateProductPage::publishPinterest()
+{
+    if (_checkPinterestInfoFiled())
+    {
+        const QStringList &pinFilePaths = _getFilesToPin();
+        //const QString &clientId = ui->lineEditPinterestApiId->text();
+        //const QString &clientSecret = ui->lineEditPinterestApiSecret->text();
+        const QString &accessToken = ui->lineEditPinterestAccessToken->text();
+
+        // Créer un objet QHttpMultiPart pour les données multipart/form-data
+        QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+
+        // Ajouter le token d'accès à la requête
+        QHttpPart tokenPart;
+        tokenPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"access_token\""));
+        tokenPart.setBody(accessToken.toUtf8());
+        multiPart->append(tokenPart);
+
+        // Ajouter les fichiers images
+        for (const QString &filePath : pinFilePaths) {
+            QFile *file = new QFile(filePath);
+            if (!file->open(QIODevice::ReadOnly)) {
+                qDebug() << "Impossible d'ouvrir le fichier" << filePath;
+                delete file;
+                continue;
+            }
+
+            QHttpPart imagePart;
+            imagePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("image/*"));
+            imagePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"image\"; filename=\"" + file->fileName() + "\""));
+            imagePart.setBodyDevice(file);
+            multiPart->append(imagePart);
+        }
+
+        // Créer une requête POST pour l'API Pinterest
+        QUrl url("https://api.pinterest.com/v5/pins/");
+        QNetworkRequest request(url);
+        QNetworkAccessManager manager;
+        QNetworkReply *reply = manager.post(request, multiPart);
+        multiPart->setParent(reply); // le reply détruira multiPart lorsque ce sera terminé
+
+        // Gérer la réponse de Pinterest
+        QObject::connect(reply, &QNetworkReply::finished, [=]() {
+            if (reply->error() != QNetworkReply::NoError) {
+                qDebug() << "Erreur lors de la publication sur Pinterest :" << reply->errorString();
+            } else {
+                qDebug() << "Publication réussie sur Pinterest !";
+            }
+            reply->deleteLater();
+        });
+    }
+}
+//----------------------------------------
+QStringList DialogCreateProductPage::_getFilesToPin() const
+{
+    const auto &imageFileInfos = m_pagePath.entryInfoList(
+                QStringList{"*PINTEREST*"}, QDir::Files, QDir::Name);
+    QStringList pinFilePaths;
+    for (const auto &fileInfo : qAsConst(imageFileInfos))
+    {
+        pinFilePaths << fileInfo.absoluteFilePath();
+    }
+    while (pinFilePaths.size() > 5)
+    {
+        pinFilePaths.takeLast();
+    }
+    return pinFilePaths;
+}
+//----------------------------------------
+bool DialogCreateProductPage::_checkPinterestInfoFiled()
+{
+    if (ui->lineEditPinterestTitle->text().size() < 5)
+    {
+        QMessageBox::warning(
+                    this,
+                    "No Pinterest title",
+                    "You need to enter a Pinterest title");
+        return false;
+    }
+    else if (ui->textEditPinterestDescirption->toPlainText().size() < 10)
+    {
+        QMessageBox::warning(
+                    this,
+                    "No Pinterest Description",
+                    "You need to enter the pinterest description");
+        return false;
+    }
+    else if (ui->lineEditPageUrl->text().size() < 5)
+    {
+        QMessageBox::warning(
+                    this,
+                    "No Page Url",
+                    "You need to enter the page URL");
+        return false;
+    }
+    else if (_getFilesToPin().size() < 2)
+    {
+        QMessageBox::warning(
+                    this,
+                    "No pinning images",
+                    "You need to have at least 2 images for Pinterest pinning");
+        return false;
+    }
+    return true;
+
+}
+
+//----------------------------------------
+void DialogCreateProductPage::planifyPinterest()
+{
+    if (_checkPinterestInfoFiled())
+    {
+        const QStringList &pinFilePaths = _getFilesToPin();
+        int nPinsPerDay = ui->spinBoxPinningPerDay->value();
+        const QString &permalink = ui->lineEditPageUrl->text();
+        const QTime &timePinning = ui->timeEditPinning->time();
+        const QDateTime &dateTimePinning
+                = PlannifyListModel::instance()->planify(
+                    permalink, nPinsPerDay, timePinning);
+        const QString &accessToken = ui->lineEditPinterestAccessToken->text();
+
+        // Créer un objet QHttpMultiPart pour les données multipart/form-data
+        QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+
+        // Ajouter le token d'accès à la requête
+        QHttpPart tokenPart;
+        tokenPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"access_token\""));
+        tokenPart.setBody(accessToken.toUtf8());
+        multiPart->append(tokenPart);
+
+        // Ajouter les fichiers images
+        for (const QString &filePath : pinFilePaths) {
+            QFile *file = new QFile(filePath);
+            if (!file->open(QIODevice::ReadOnly)) {
+                qDebug() << "Impossible d'ouvrir le fichier" << filePath;
+                delete file;
+                continue;
+            }
+
+            QHttpPart imagePart;
+            imagePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("image/*"));
+            imagePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"image\"; filename=\"" + file->fileName() + "\""));
+            imagePart.setBodyDevice(file);
+            multiPart->append(imagePart);
+        }
+
+        // Convertir la date et l'heure de publication en format UNIX timestamp
+        qint64 publishTimestamp = dateTimePinning.toSecsSinceEpoch();
+
+        // Ajouter la date et l'heure de publication à la requête
+        QHttpPart publishAtPart;
+        publishAtPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"publish_at\""));
+        publishAtPart.setBody(QString::number(publishTimestamp).toUtf8());
+        multiPart->append(publishAtPart);
+
+        // Créer une requête POST pour l'API Pinterest
+        QUrl url("https://api.pinterest.com/v5/pins/");
+        QNetworkRequest request(url);
+        QNetworkAccessManager manager;
+        QNetworkReply *reply = manager.post(request, multiPart);
+        multiPart->setParent(reply); // le reply détruira multiPart lorsque ce sera terminé
+
+        // Gérer la réponse de Pinterest
+        QObject::connect(reply, &QNetworkReply::finished, [=]() {
+            if (reply->error() != QNetworkReply::NoError) {
+                qDebug() << "Erreur lors de la planification de la publication sur Pinterest :" << reply->errorString();
+            } else {
+                qDebug() << "Publication planifiée sur Pinterest pour" << dateTimePinning.toString() << "!";
+            }
+            reply->deleteLater();
+        });
+    }
 }
 //----------------------------------------

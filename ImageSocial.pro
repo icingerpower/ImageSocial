@@ -32,6 +32,7 @@ FORMS += \
 include(model/model.pri)
 include(../common/ffmpeg/ffmpeg.pri)
 include(../common/types/types.pri)
+include(../common/config/config.pri)
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

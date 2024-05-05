@@ -40,9 +40,14 @@ public slots:
     void cropPinterest();
     void cropGoogleImageAds();
 
+    // Tab pinterest
+    void publishPinterest();
+    void planifyPinterest();
+
 private slots:
-    void _replyDeepAi(QNetworkReply *reply);
-    void _replyChaptGpt4(QNetworkReply *reply);
+    //void _replyDeepAi(QNetworkReply *reply);
+    //void _replyChaptGpt4(QNetworkReply *reply);
+    //void _replyPinterest(QNetworkReply *reply);
     void onImageSelectionChanged(
             const QItemSelection &selected,
             const QItemSelection &deselected);
@@ -63,6 +68,8 @@ private:
     QGraphicsPixmapItem *m_pixmapItem;
     QGraphicsScene m_scene;
     ResizableRect *m_rectVertical;
+    bool _checkPinterestInfoFiled();
+    QStringList _getFilesToPin() const;
     //ResizableRect *m_rectPinterest;
 };
 

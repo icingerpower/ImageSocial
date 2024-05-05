@@ -9,7 +9,7 @@ class PlannifyListModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit PlannifyListModel(QObject *parent = nullptr);
+    static PlannifyListModel *instance();
     QDateTime getNextDateTime(int maxPinPerDay, const QTime &time) const;
     void planify(const QDateTime &dateTime, const QString &baseName);
     QDateTime planify(const QString &baseName, int maxPinPerDay, const QTime &time);
@@ -25,6 +25,7 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
 private:
+    explicit PlannifyListModel(QObject *parent = nullptr);
     QList<QVariantList> m_listOfVariantList;
     void _saveInSettings();
     void _loadFromSettings();

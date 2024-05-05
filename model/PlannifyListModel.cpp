@@ -1,8 +1,18 @@
+#include "../common/config/SettingsManager.h"
+
 #include "PlannifyListModel.h"
+
+const QString KEY_PLANNED_PINS{"plannedPins"};
 
 PlannifyListModel::PlannifyListModel(QObject *parent)
     : QAbstractTableModel(parent)
 {}
+
+PlannifyListModel *PlannifyListModel::instance()
+{
+    static PlannifyListModel instance;
+    return &instance;
+}
 
 QDateTime PlannifyListModel::getNextDateTime(
     int maxPinPerDay, const QTime &time) const
@@ -72,7 +82,6 @@ QVariant PlannifyListModel::headerData(
     return QVariant{};
 }
 
-
 int PlannifyListModel::rowCount(const QModelIndex &) const
 {
     return m_listOfVariantList.size();
@@ -99,8 +108,23 @@ QVariant PlannifyListModel::data(
 
 void PlannifyListModel::_saveInSettings()
 {
+    auto settings = SettingsManager::instance()->getSettings();
+    if (m_listOfVariantList.size() > 0)
+    {
+        settings->setValue(KEY_PLANNED_PINS, QVariant::fromValue(m_listOfVariantList));
+    }
+    else if (settings->contains(KEY_PLANNED_PINS))
+    {
+        settings->remove(KEY_PLANNED_PINS);
+    }
 }
 
 void PlannifyListModel::_loadFromSettings()
 {
+    auto settings = SettingsManager::instance()->getSettings();
+    if (settings->contains(KEY_PLANNED_PINS))
+    {
+        m_listOfVariantList = settings->value(
+                    KEY_PLANNED_PINS).value<QList<QVariantList>>();
+    }
 }

@@ -13,6 +13,7 @@
 #include "DialogVideoEditor.h"
 #include "ResizableRect.h"
 #include "model/ImageDrawerAbstract.h"
+#include "model/PageInfoList.h"
 
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
@@ -33,6 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     m_urlLoaded = false;
+    ui->buttonGeneratePinterestVideos->setHidden(true);
     ui->graphicsView->setScene(&m_scene);
     ui->graphicsViewImageToCrop->setScene(&m_sceneToCrop);
 
@@ -105,6 +107,53 @@ void MainWindow::browseUrl()
         ui->lineEditBaseName->clear();
         QUrl url(urlString);
         m_webView->load(url);
+    }
+}
+//----------------------------------------
+void MainWindow::exportPagesCsv()
+{
+    if (!ui->lineEditDirImages->text().isEmpty())
+    {
+        QStringList baseNames = _getBaseNames();
+        std::sort(baseNames.begin(), baseNames.end());
+        QDir dirImages = ui->lineEditDirImages->text();
+        QList<QHash<QString, QString>> listOfLinks;
+        QSet<QString> setColNames;
+        for (const auto &baseName : baseNames)
+        {
+            QString pagePath = dirImages.filePath(baseName);
+            PageInfoList infoList(pagePath);
+            listOfLinks << infoList.linksFilled();
+            listOfLinks.last()["Name"] = baseName;
+            const auto &links = listOfLinks.last();
+            for (auto it = links.begin(); it != links.end(); ++it)
+            {
+                setColNames << it.key();
+            }
+        }
+        QStringList colNames{setColNames.begin(), setColNames.end()};
+        PageInfoList::sortLinkNames(colNames);
+        colNames.insert(0, "Image");
+        colNames.insert(1, "Name");
+        QString sep{"\t"};
+        QStringList lines{colNames.join(sep)};
+        for (const auto &links : listOfLinks)
+        {
+            QStringList lineElements;
+            for (const auto &colName : colNames)
+            {
+                lineElements << links.value(colName, QString{});
+            }
+            lines << lineElements.join(sep);
+        }
+        QString csvFilePath = dirImages.filePath(dirImages.dirName() + ".csv");
+        QFile file(csvFilePath);
+        if (file.open(QFile::WriteOnly))
+        {
+            QTextStream stream(&file);
+            stream << lines.join("\n");
+            file.close();
+        }
     }
 }
 //----------------------------------------
@@ -889,6 +938,11 @@ void MainWindow::_connectSlots()
             &QPushButton::clicked,
             this,
             &MainWindow::browseUrl);
+    connect(ui->buttonExportCsvPages,
+            &QPushButton::clicked,
+            this,
+            &MainWindow::exportPagesCsv);
+
     connect(ui->buttonBrowseDirImageToCrop,
             &QPushButton::clicked,
             this,
@@ -945,7 +999,20 @@ void MainWindow::_connectSlots()
 //----------------------------------------
 void MainWindow::_fillComboPageDirs()
 {
-    QDir imageDir = ui->lineEditDirImages->text();
+    QStringList baseNames = _getBaseNames();
+    baseNames.insert(0, "");
+    ui->comboBoxPageDirs->clear();
+    ui->comboBoxPageDirs->addItems(baseNames);
+}
+//----------------------------------------
+QStringList MainWindow::_getBaseNames() const
+{
+    const QString &imageDirPath = ui->lineEditDirImages->text();
+    if (imageDirPath.isEmpty())
+    {
+        return QStringList{};
+    }
+    QDir imageDir = imageDirPath;
     const auto &fileInfos = imageDir.entryInfoList(
                 QStringList{"*.jpg"}, QDir::Files, QDir::Name);
     QSet<QString> baseNamesSet;
@@ -957,9 +1024,7 @@ void MainWindow::_fillComboPageDirs()
     }
     QStringList baseNames{baseNamesSet.begin(), baseNamesSet.end()};
     std::sort(baseNames.begin(), baseNames.end(), std::greater<QString>());
-    baseNames.insert(0, "");
-    ui->comboBoxPageDirs->clear();
-    ui->comboBoxPageDirs->addItems(baseNames);
+    return baseNames;
 }
 //----------------------------------------
 void MainWindow::_addCurrentComboPageDir()

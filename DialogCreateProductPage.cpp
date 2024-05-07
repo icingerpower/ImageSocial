@@ -1,3 +1,4 @@
+#include <QFileDialog>
 #include <QApplication>
 #include <QProcess>
 #include <QFile>
@@ -9,6 +10,7 @@
 #include <QHttpMultiPart>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QWebEnginePage>
 
 #include "../common/config/SettingsManager.h"
 
@@ -25,6 +27,14 @@ static const QString SETTINGS_API_PINTEREST_SECRET{"apiPinterestSecret"};
 static const QString SETTINGS_API_PINTEREST_ACCESS_TOKEN{"apiPinterestToken"};
 static const QString SETTINGS_API_KEY_DEEP_IMAGE{"apiKeyDeepImage"};
 static const QString SETTINGS_API_KEY_CHAT_GPT{"apiKeyChatGpt"};
+static const QString SETTINGS_KEY_CHATGPT_PROMPT{"chatGptPrompt"};
+static const QString SETTINGS_KEY_PAGE_TITLE{"pageTitle"};
+static const QString SETTINGS_KEY_PAGE_PERMALINK{"pagePermalink"};
+static const QString SETTINGS_KEY_PAGE_DESC{"pageDesc"};
+static const QString SETTINGS_KEY_PIN_TITLE{"pinTitle"};
+static const QString SETTINGS_KEY_PIN_DESC{"pinDesc"};
+static const QString SETTINGS_KEY_META_DESC{"metaDesc"};
+static const QString SETTINGS_KEY_FACE_SWAP_SOURCE_PATH{"faceSwapSourceImage"};
 //----------------------------------------
 DialogCreateProductPage::DialogCreateProductPage(
         const QString &pagePath, QWidget *parent)
@@ -32,13 +42,24 @@ DialogCreateProductPage::DialogCreateProductPage(
     , ui(new Ui::DialogCreateProductPage)
 {
     ui->setupUi(this);
+    m_webViewDeepImage = nullptr;
+    m_webViewChatGpt = nullptr;
+    m_webViewPageCreation = nullptr;
+    m_webViewFaceSwap = nullptr;
+    m_webViewCj = nullptr;
     m_pagePath = pagePath;
     _initFileTrees();
-    _initWebView();
+    _initWebViewProfile();
+    _initWebViewDeepImage();
+    _initWebViewChatGpt();
+    _initWebViewPageCreation();
+    _initWebViewFaceSwap();
+    _initWebViewCj();
     _initGraphicsView();
     auto model = new PageInfoList{pagePath, ui->tableViewPageInfos};
     ui->tableViewPageInfos->setModel(model);
     ui->listViewPinteresPlanned->setModel(PlannifyListModel::instance());
+    _initSizing();
     _loadSettings();
     _connectSlots();
     m_aiWasRun = false;
@@ -46,18 +67,81 @@ DialogCreateProductPage::DialogCreateProductPage(
 //----------------------------------------
 DialogCreateProductPage::~DialogCreateProductPage()
 {
-    m_webView->setParent(nullptr);
+    m_webViewPageCreation->setParent(nullptr);
     delete ui;
 }
 //----------------------------------------
-void DialogCreateProductPage::_initWebView()
+QString DialogCreateProductPage::getPermalink() const
 {
-    static QWebEngineView webEngineView;
-    webEngineView.setParent(nullptr);
-    m_webView = &webEngineView;
-    ui->pageProductPage->layout()->addWidget(m_webView);
+    QString permalink = ui->lineEditPageTitle->text();
+    permalink.replace("\"", "");
+    permalink.replace("\'", "");
+    permalink.replace(" ", "-");
+    return permalink.toLower();
+}
+//----------------------------------------
+QString DialogCreateProductPage::getPageLink() const
+{
+    return "https://pradize.com/product/" + getPermalink();
+}
+//----------------------------------------
+void DialogCreateProductPage::_initWebViewProfile()
+{
+    //static QWebEngineProfile webEngineProfile{"CustomProfile"};
+    m_webEngineProfile = new QWebEngineProfile{"CustomProfile", this};
+    auto settings = SettingsManager::instance()->getSettings();
+    QString path = settings->fileName();
+    path.remove(path.length()-4, 4);
+    path += "Cache";
+    m_webEngineProfile->setCachePath(path);
+    m_webEngineProfile->setHttpCacheMaximumSize(100 * 1024 * 1024); // 100 MB
+    m_webEngineProfile->setDownloadPath(m_pagePath.path());
+    connect(m_webEngineProfile,
+            &QWebEngineProfile::downloadRequested,
+            this,
+            [](QWebEngineDownloadRequest *downloadRequest){
+        downloadRequest->accept();
+    });
+}
+//----------------------------------------
+void DialogCreateProductPage::_initWebViewDeepImage()
+{
+    m_webViewDeepImage = new QWebEngineView(m_webEngineProfile, ui->page01DeepImage);
+    ui->page01DeepImage->layout()->addWidget(m_webViewDeepImage);
+    QUrl url("https://deep-image.ai/app/application/options/");
+    m_webViewDeepImage->load(url);
+}
+//----------------------------------------
+void DialogCreateProductPage::_initWebViewChatGpt()
+{
+    m_webViewChatGpt = new QWebEngineView(m_webEngineProfile, ui->page02ChatGpt);
+    ui->page02ChatGpt->layout()->addWidget(m_webViewChatGpt);
+    QUrl url("https://chatgpt.com/g/g-c0kzqHnSq-fashion-keywords");
+    m_webViewChatGpt->load(url);
+}
+//----------------------------------------
+void DialogCreateProductPage::_initWebViewPageCreation()
+{
+    m_webViewPageCreation = new QWebEngineView(m_webEngineProfile, ui->pageProductPage);
+    ui->pageProductPage->layout()->addWidget(m_webViewPageCreation);
     QUrl urlAddPage("https://pradize.commercehq.com/admin/products/create");
-    m_webView->load(urlAddPage);
+    m_webViewPageCreation->load(urlAddPage);
+}
+//----------------------------------------
+void DialogCreateProductPage::_initWebViewFaceSwap()
+{
+    m_webViewFaceSwap = new QWebEngineView(m_webEngineProfile, ui->page04FaceSwap);
+    ui->page04FaceSwap->layout()->addWidget(m_webViewFaceSwap);
+    QUrl url("https://remaker.ai/face-swap-free");
+    m_webViewFaceSwap->load(url);
+}
+//----------------------------------------
+void DialogCreateProductPage::_initWebViewCj()
+{
+    m_webViewCj = new QWebEngineView(m_webEngineProfile, ui->pageWebCJ);
+    ui->pageWebCJ->layout()->addWidget(m_webViewCj);
+    QUrl url("https://cjdropshipping.com/mine/sourcing/list");
+    m_webViewCj->load(url);
 }
 //----------------------------------------
 void DialogCreateProductPage::_initFileTrees()
@@ -73,6 +157,7 @@ void DialogCreateProductPage::_initFileTrees()
             ->setRootIndex(
                 fileSystemModelSource->index(
                     fileSystemModelSource->rootPath()));
+    ui->treeViewFilesSource->setHidden(true);
 
     QFileSystemModel *fileSystemModelPage = new QFileSystemModel(
                 ui->treeViewFilesPage);
@@ -98,6 +183,39 @@ void DialogCreateProductPage::_initGraphicsView()
     m_scene.addItem(m_rectVertical);
 }
 //----------------------------------------
+void DialogCreateProductPage::_initSizing()
+{
+    QStringList sizesShoe{
+        "US-4 | UK/AU-2 | EU-35"
+        , "US-5 | UK/AU-3 | EU-36"
+        , "US-6 | UK/AU-4 | EU-37"
+        , "US-7 | UK/AU-5 | EU-38"
+        , "US-8 | UK/AU-6 | EU-39"
+        , "US-8.5 | UK/AU-6.5 | EU-40"
+        , "US-9 | UK/AU-7 | EU-41"
+        , "US-10 | UK/AU-8 | EU-42"
+        , "US-10.5 | UK/AU-8.5 | EU-43"
+        , "US-11 | UK/AU-9 | EU-44"
+        , "US-12 | UK/AU-10 | EU-45"
+        , "US-13 | UK/AU-11 | EU-46"
+    };
+    ui->comboBoxShoeSizeFrom->addItems(sizesShoe);
+    ui->comboBoxShoeSizeTo->addItems(sizesShoe);
+    ui->comboBoxShoeSizeTo->setCurrentIndex(8);
+    QStringList sizesClothe{
+        "US-2 | UK/AU-6 | EU/DE-32 | FR/ES-34"
+        , "US-4 | UK/AU-8 | EU/DE-34 | FR/ES-36"
+        , "US-6 | UK/AU-10 | EU/DE-36 | FR/ES-38"
+        , "US-8 | UK/AU-12 | EU/DE-38 | FR/ES-40"
+        , "US-10 | UK/AU-14 | EU/DE-40 | FR/ES-42"
+        , "US-12 | UK/AU-16 | EU/DE-42 | FR/ES-44"
+        , "US-14 | UK/AU-18 | EU/DE-44 | FR/ES-46"
+    };
+    ui->comboBoxClotheSizeFrom->addItems(sizesClothe);
+    ui->comboBoxClotheSizeTo->addItems(sizesClothe);
+    ui->comboBoxClotheSizeTo->setCurrentIndex(3);
+}
+//----------------------------------------
 void DialogCreateProductPage::_loadSettings()
 {
     auto settings = SettingsManager::instance()->getSettings();
@@ -111,6 +229,23 @@ void DialogCreateProductPage::_loadSettings()
     ui->lineEditDeepImageApitKey->setText(apiKeyDeepImage);
     QString apiKeyChatGpt = settings->value(SETTINGS_API_KEY_CHAT_GPT, QString{}).toString();
     ui->lineEditChatGptApiKey->setText(apiKeyChatGpt);
+    auto settingsLocal = settingsPage();
+    QString chatGptReply = settingsLocal->value(SETTINGS_KEY_CHATGPT_PROMPT, QString{}).toString();
+    ui->textEditChatGpt->setPlainText(chatGptReply);
+    QString pageTitle = settingsLocal->value(SETTINGS_KEY_PAGE_TITLE, QString{}).toString();
+    ui->lineEditPageTitle->setText(pageTitle);
+    QString permalink = settingsLocal->value(SETTINGS_KEY_PAGE_PERMALINK, QString{}).toString();
+    ui->lineEditPermalink->setText(permalink);
+    QString pageDesc = settingsLocal->value(SETTINGS_KEY_PAGE_DESC, QString{}).toString();
+    ui->textEditPageDesc->setPlainText(pageDesc);
+    QString pinTitle = settingsLocal->value(SETTINGS_KEY_PIN_TITLE, QString{}).toString();
+    ui->lineEditPinTitle->setText(pinTitle);
+    QString pinDesc = settingsLocal->value(SETTINGS_KEY_PIN_DESC, QString{}).toString();
+    ui->textEditPinDesc->setPlainText(pinDesc);
+    QString metaDesc = settingsLocal->value(SETTINGS_KEY_META_DESC, QString{}).toString();
+    ui->lineEditPageMetaDesc->setText(metaDesc);
+    QString faceSwapSource = settings->value(SETTINGS_KEY_FACE_SWAP_SOURCE_PATH, QString{}).toString();
+    ui->lineEditFaceSwapSource->setText(faceSwapSource);
 }
 //----------------------------------------
 void DialogCreateProductPage::onImageSelectionChanged(
@@ -121,6 +256,9 @@ void DialogCreateProductPage::onImageSelectionChanged(
         QString imageFileName = selected.indexes().first().data().toString();
         QString imageFilePath = m_pagePath.filePath(imageFileName);
         QPixmap pixmap(imageFilePath);
+        auto pixmapPreview = pixmap.scaledToHeight(200);
+        ui->labelPageImage->setPixmap(pixmapPreview);
+
         auto width = ui->graphicsView->width()-2;
         auto height = ui->graphicsView->height()-2;
         m_scene.setSceneRect(QRect(0, 0, width, height));
@@ -137,10 +275,40 @@ void DialogCreateProductPage::onImageSelectionChanged(
 //----------------------------------------
 void DialogCreateProductPage::_connectSlots()
 {
+    connect(ui->buttonOpenParentFolder,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::openParentPageFolder);
     connect(ui->buttonOpenPageFolder,
             &QPushButton::clicked,
             this,
             &DialogCreateProductPage::openPageFolder);
+
+    // Tab 01 deep image
+    connect(ui->buttonCopyPathPagePath,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copyPageDirPath);
+    connect(ui->buttonRemoveDeepImagePostNames,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::removeDeepImagesPostNames);
+
+    // Tab 02 ChatGpt
+    connect(ui->buttonCopyFirstImagePath_2,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copyFirstImagePath);
+    connect(ui->buttonCopyFirstImagePath,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copyFirstImagePath);
+    connect(ui->buttonCopyPrompt,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copyPrompt);
+
+    // Tab 03 ai
     connect(ui->buttonRunAis,
             &QPushButton::clicked,
             this,
@@ -149,6 +317,107 @@ void DialogCreateProductPage::_connectSlots()
             &QPushButton::clicked,
             this,
             &DialogCreateProductPage::replaceInAiText);
+    connect(ui->buttonRecordPageTitle,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::recordPageTitle);
+    connect(ui->buttonRecordPageDesc,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::recordPageDescription);
+    connect(ui->buttonRecordPinterestTitle,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::recordPinTitle);
+    connect(ui->buttonRecordPinterestDescription,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::recordPinDescription);
+    connect(ui->buttonRecordMetaDesc,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::recordMetaDesc);
+    connect(ui->buttonCopyPermalink,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copyPageLinkFromInfo);
+    connect(ui->buttonCopyPinTitle,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copyPinTitle);
+    connect(ui->buttonCopyPinDescription,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copyPinDescription);
+    connect(ui->lineEditPageTitle,
+            &QLineEdit::textEdited,
+            this,
+            [this](const QString &text){
+        settingsPage()->setValue(SETTINGS_KEY_PAGE_TITLE, text);
+    });
+    connect(ui->lineEditPermalink,
+            &QLineEdit::textEdited,
+            this,
+            [this](const QString &text){
+        settingsPage()->setValue(SETTINGS_KEY_PAGE_PERMALINK, text);
+    });
+    connect(ui->textEditChatGpt,
+            &QTextEdit::textChanged,
+            this,
+            [this](){
+        settingsPage()->setValue(SETTINGS_KEY_CHATGPT_PROMPT, ui->textEditChatGpt->toPlainText());
+    });
+    connect(ui->textEditPageDesc,
+            &QTextEdit::textChanged,
+            this,
+            [this](){
+        settingsPage()->setValue(SETTINGS_KEY_PAGE_DESC, ui->textEditPageDesc->toPlainText());
+    });
+    connect(ui->lineEditPinTitle,
+            &QLineEdit::textEdited,
+            this,
+            [this](const QString &text){
+        settingsPage()->setValue(SETTINGS_KEY_PIN_TITLE, text);
+    });
+    connect(ui->textEditPinDesc,
+            &QTextEdit::textChanged,
+            this,
+            [this](){
+        settingsPage()->setValue(SETTINGS_KEY_PIN_DESC, ui->textEditPinDesc->toPlainText());
+    });
+    connect(ui->lineEditPageMetaDesc,
+            &QLineEdit::textEdited,
+            this,
+            [this](const QString &text){
+        settingsPage()->setValue(SETTINGS_KEY_META_DESC, text);
+    });
+    connect(ui->lineEditFaceSwapSource,
+            &QLineEdit::textEdited,
+            this,
+            [this](const QString &text){
+        auto settings = SettingsManager::instance()->getSettings();
+        settings->setValue(SETTINGS_KEY_FACE_SWAP_SOURCE_PATH, text);
+    });
+
+    // Tab 04 face swap
+    connect(ui->buttonCopyPageImagePath,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copySelImagePath);
+    connect(ui->buttonBRowseFaceSwapSource,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::browseFaceSmapImagePath);
+    connect(ui->buttonCopyFaceSwapSource,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copyFaceSmapImagePath);
+    connect(ui->buttonOpenFaceSwapSource,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::openFaceSmapImageDir);
+
+    // Tab 05 Link Informations
     connect(ui->buttonCopyLink,
             &QPushButton::clicked,
             this,
@@ -161,10 +430,37 @@ void DialogCreateProductPage::_connectSlots()
             &QPushButton::clicked,
             this,
             &DialogCreateProductPage::addLinkReviews);
+    connect(ui->buttonAddLinkPinterest,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::addLinkPinterest);
     connect(ui->buttonRemoveLink,
             &QPushButton::clicked,
             this,
             &DialogCreateProductPage::removeLink);
+
+    // Tab 06 edit page
+    connect(ui->buttonCopySizeClothe,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copySizeClothe);
+    connect(ui->buttonCopySizeShoe,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copySizeShoe);
+    connect(ui->buttonFillPage,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::fillPage);
+    connect(ui->buttonCopyPageDescription,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copyPageDescription);
+    connect(ui->buttonCopyPageLink,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copyPageLink);
+
     connect(ui->treeViewFilesPage->selectionModel(),
             &QItemSelectionModel::selectionChanged,
             this,
@@ -232,6 +528,14 @@ void DialogCreateProductPage::openPageFolder()
     QDesktopServices::openUrl(folderUrl);
 }
 //----------------------------------------
+void DialogCreateProductPage::openParentPageFolder()
+{
+    QDir parentDir = m_pagePath;
+    parentDir.cd("..");
+    QUrl folderUrl = QUrl::fromLocalFile(parentDir.path());
+    QDesktopServices::openUrl(folderUrl);
+}
+//----------------------------------------
 void DialogCreateProductPage::runAi()
 {
     if (m_aiWasRun)
@@ -256,7 +560,174 @@ void DialogCreateProductPage::replaceInAiText()
     dialog.exec();
     if (dialog.wasAccepted())
     {
-        //TODO
+        QString text = ui->textEditChatGpt->toPlainText();
+        text.replace(dialog.getBeforeText(), dialog.getAfterText());
+        ui->textEditChatGpt->setPlainText(text);
+        //auto settings = SettingsManager::instance()->getSettings();
+        //settings->setValue(SETTINGS_KEY_CHATGPT_PROMPT, text);
+    }
+}
+//----------------------------------------
+void DialogCreateProductPage::recordPageTitle()
+{
+    QString text = ui->textEditChatGpt->textCursor().selectedText();
+    ui->lineEditPageTitle->setText(text);
+    settingsPage()->setValue(SETTINGS_KEY_PAGE_TITLE, text);
+    const QString &permalink = getPermalink();
+    ui->lineEditPermalink->setText(permalink);
+    settingsPage()->setValue(SETTINGS_KEY_PAGE_PERMALINK, permalink);
+}
+//----------------------------------------
+void DialogCreateProductPage::recordPageDescription()
+{
+    QString text = ui->textEditChatGpt->textCursor().selectedText();
+    ui->textEditPageDesc->setPlainText(text);
+}
+//----------------------------------------
+void DialogCreateProductPage::recordPinTitle()
+{
+    QString text = ui->textEditChatGpt->textCursor().selectedText();
+    ui->lineEditPinTitle->setText(text);
+    settingsPage()->setValue(SETTINGS_KEY_PIN_TITLE, text);
+}
+//----------------------------------------
+void DialogCreateProductPage::recordPinDescription()
+{
+    QString text = ui->textEditChatGpt->textCursor().selectedText();
+    ui->textEditPinDesc->setPlainText(text);
+    //auto settings = SettingsManager::instance()->getSettings();
+    //settings->setValue(SETTINGS_KEY_PIN_DESC, text);
+}
+//----------------------------------------
+void DialogCreateProductPage::recordMetaDesc()
+{
+    QString text = ui->textEditChatGpt->textCursor().selectedText();
+    ui->lineEditPageMetaDesc->setText(text);
+    settingsPage()->setValue(SETTINGS_KEY_META_DESC, text);
+}
+//----------------------------------------
+void DialogCreateProductPage::copyPageLinkFromInfo()
+{
+    auto clipboard = QApplication::clipboard();
+    clipboard->setText("https://pradize.com/product/" + ui->lineEditPermalink->text());
+}
+//----------------------------------------
+void DialogCreateProductPage::copyPinTitle()
+{
+    auto clipboard = QApplication::clipboard();
+    clipboard->setText(ui->lineEditPinTitle->text());
+}
+//----------------------------------------
+void DialogCreateProductPage::copyPinDescription()
+{
+    auto clipboard = QApplication::clipboard();
+    clipboard->setText(ui->textEditPinDesc->toPlainText());
+}
+//----------------------------------------
+void DialogCreateProductPage::copyPageDirPath()
+{
+    auto clipboard = QApplication::clipboard();
+    clipboard->setText(m_pagePath.path());
+}
+//----------------------------------------
+void DialogCreateProductPage::removeDeepImagesPostNames()
+{
+    const QStringList addedMarks{"-height="};
+    for (const auto &addedMark : addedMarks)
+    {
+        const auto &imageFileInfos = m_pagePath.entryInfoList(
+                    QStringList{"*" + addedMark + "*.jpg"}, QDir::Files, QDir::Name);
+        for (const auto &imageFileInfo : imageFileInfos)
+        {
+            QStringList elements = imageFileInfo.absoluteFilePath().split(addedMark);
+            elements.takeLast();
+            const QString &newFilePath = elements.join(addedMark) + ".jpg";
+            const QString &oldFilePath = imageFileInfo.absoluteFilePath();
+            QFile::copy(oldFilePath, newFilePath);
+            QFile::remove(oldFilePath);
+        }
+    }
+}
+//----------------------------------------
+void DialogCreateProductPage::copyFirstImagePath()
+{
+    auto clipboard = QApplication::clipboard();
+    const auto &imageFileInfos = m_pagePath.entryInfoList(
+                QStringList{"*.jpg"}, QDir::Files, QDir::Name);
+    if (imageFileInfos.size() > 0)
+    {
+        clipboard->setText(imageFileInfos[0].absoluteFilePath());
+    }
+    else
+    {
+        clipboard->setText(QString{});
+    }
+}
+//----------------------------------------
+void DialogCreateProductPage::copyPrompt()
+{
+    auto clipboard = QApplication::clipboard();
+    QString prompt = R"(
+Please provide a product description for this clothe that you can see on the image.
+- The product description should have at least 200 words.
+- The product description should use simple phrases that are easy to translate.
+- Use word that raise confidence and perceived value.
+- The first paragraph should connect with the reader and mention the occasion that the clothe can be used.
+- In the description, please prevent most objections the buyer could have (except regarding shipping time as we don’t ship fast). Among the sale argument, we offer free return and free size exchange.
+- We only sell the clothe so don’t make the buyer believe he will also receive the accessories
+2) Once that you are done with description, please suggest 5 unique product names, with a woman name.
+3) Then suggest a short google meta description that says that we ship world wide and that the first article is satisfied or refunded without return needed
+4) Then suggest a 3 pinterest pin titles + 1 description that includes keywords people may use to search such product (as you have been trained, without hashtags, and adding as much relevant keywords as possible).
+)";
+    clipboard->setText(prompt);
+}
+//----------------------------------------
+void DialogCreateProductPage::copySelImagePath()
+{
+    auto clipboard = QApplication::clipboard();
+    const auto &selIndexes = ui->treeViewFilesPage->selectionModel()->selectedIndexes();
+    if (selIndexes.size() > 0)
+    {
+        QString fileName = selIndexes.first().data().toString();
+        const QString &filePath = m_pagePath.absoluteFilePath(fileName);
+        clipboard->setText(filePath);
+    }
+    else
+    {
+        clipboard->setText(QString{});
+    }
+}
+//----------------------------------------
+void DialogCreateProductPage::browseFaceSmapImagePath()
+{
+    // TODO
+    const auto &filePath = QFileDialog::getOpenFileName(
+                this,
+                "Settings file",
+                QString{},
+                QString{"Images (*.png *.xpm *.jpg*.jpeg *.PNG *.JPG *.gif)"});
+    if (!filePath.isEmpty())
+    {
+        ui->lineEditFaceSwapSource->setText(filePath);
+        auto settings = SettingsManager::instance()->getSettings();
+        settings->setValue(SETTINGS_KEY_FACE_SWAP_SOURCE_PATH, filePath);
+    }
+}
+//----------------------------------------
+void DialogCreateProductPage::copyFaceSmapImagePath()
+{
+    auto clipboard = QApplication::clipboard();
+    clipboard->setText(ui->lineEditFaceSwapSource->text());
+}
+//----------------------------------------
+void DialogCreateProductPage::openFaceSmapImageDir()
+{
+    const auto &filePath = ui->lineEditFaceSwapSource->text();
+    if (!filePath.isEmpty())
+    {
+        QFileInfo fileInfo(filePath);
+        QUrl folderUrl = QUrl::fromLocalFile(fileInfo.dir().path());
+        QDesktopServices::openUrl(folderUrl);
     }
 }
 //----------------------------------------
@@ -283,6 +754,12 @@ void DialogCreateProductPage::addLinkReviews()
     model->addLinkReviews();
 }
 //----------------------------------------
+void DialogCreateProductPage::addLinkPinterest()
+{
+    auto model = static_cast<PageInfoList *>(ui->tableViewPageInfos->model());
+    model->addLinkPin();
+}
+//----------------------------------------
 void DialogCreateProductPage::removeLink()
 {
     auto selIndexes = ui->tableViewPageInfos->selectionModel()->selectedIndexes();
@@ -291,6 +768,92 @@ void DialogCreateProductPage::removeLink()
         auto model = static_cast<PageInfoList *>(ui->tableViewPageInfos->model());
         model->remove(selIndexes.first());
     }
+}
+//----------------------------------------
+void DialogCreateProductPage::copySizeClothe()
+{
+    int start = ui->comboBoxClotheSizeFrom->currentIndex();
+    int end = ui->comboBoxClotheSizeTo->currentIndex();
+    auto clipboard = QApplication::clipboard();
+    if (start < end)
+    {
+        QStringList sizes;
+        for (int i=start; i<=end; ++i)
+        {
+            sizes << ui->comboBoxClotheSizeFrom->itemText(i);
+        }
+        clipboard->setText(sizes.join(","));
+    }
+    else
+    {
+        clipboard->setText(QString{});
+    }
+}
+//----------------------------------------
+void DialogCreateProductPage::copySizeShoe()
+{
+    int start = ui->comboBoxShoeSizeFrom->currentIndex();
+    int end = ui->comboBoxShoeSizeTo->currentIndex();
+    auto clipboard = QApplication::clipboard();
+    if (start < end)
+    {
+        QStringList sizes;
+        for (int i=start; i<=end; ++i)
+        {
+            sizes << ui->comboBoxShoeSizeFrom->itemText(i);
+        }
+        clipboard->setText(sizes.join(","));
+    }
+    else
+    {
+        clipboard->setText(QString{});
+    }
+}
+//----------------------------------------
+void DialogCreateProductPage::fillPage()
+{
+    QString jsMultiVariant = R"(document.querySelector("#chq-app > div.ng-scope > section > div > div > div > div.page-content > form > div:nth-child(1) > div > div.form-group.v-table.big-radio > div > label.btn.btn-primary.v-cell.toggle-multi > span").click();)";
+    m_webViewPageCreation->page()->runJavaScript(jsMultiVariant);
+
+    QString jsCodeTitle = R"(document.querySelector("#chq-app > div.ng-scope > section > div > div > div > div.page-content > form > div:nth-child(1) > div > div:nth-child(3) > input").value = "%1";)";
+    jsCodeTitle.replace("%1", ui->lineEditPageTitle->text());
+    m_webViewPageCreation->page()->runJavaScript(jsCodeTitle);
+
+    QString jsCodeMetaTitle = R"(document.querySelector("#seo_title").value = "%1";)";
+    jsCodeMetaTitle.replace("%1", ui->lineEditPageTitle->text());
+    m_webViewPageCreation->page()->runJavaScript(jsCodeMetaTitle);
+
+    QString jsCodeMetaDesc = R"(document.querySelector("#seo_meta").value = "%1";)";
+    jsCodeMetaDesc.replace("%1", ui->lineEditPageMetaDesc->text());
+    m_webViewPageCreation->page()->runJavaScript(jsCodeMetaDesc);
+
+    QString jsCodePermalink = R"(document.querySelector("#seo_url").value = "%1";)";
+    const QString &permalink = getPermalink();
+    jsCodePermalink.replace("%1", permalink);
+    m_webViewPageCreation->page()->runJavaScript(jsCodePermalink);
+    ui->lineEditPageUrl->setText(getPageLink());
+        /*
+    m_webViewPageCreation->page()->runJavaScript(jsCodeTitle, 0, [jsCodeTitle](const QVariant &result){
+        qDebug() << "Running javascript: " << jsCodeTitle;
+        qDebug() << "Running result: " << result;
+    });
+    //*/
+}
+//----------------------------------------
+void DialogCreateProductPage::copyPageDescription()
+{
+    const QString &text = ui->textEditPageDesc->toPlainText();
+    auto clipboard = QApplication::clipboard();
+    clipboard->setText(text);
+}
+//----------------------------------------
+void DialogCreateProductPage::copyPageLink()
+{
+    auto clipboard = QApplication::clipboard();
+    const QString &pageLink = getPageLink();
+    clipboard->setText(pageLink);
+    auto model = static_cast<PageInfoList *>(ui->tableViewPageInfos->model());
+    model->setPageLink(pageLink);
 }
 //----------------------------------------
 void DialogCreateProductPage::_runAiDeepImage()
@@ -454,7 +1017,6 @@ void DialogCreateProductPage::_runAiChatGpt()
     if (imageFilePaths.size() > 0)
     {
         const auto &firstImageFileName = imageFilePaths[0].fileName();
-        QUrl url("https://api.openai.com/v1/chat/completions");
         QString programCurl{"curl"};
         const QString &apiKey = ui->lineEditChatGptApiKey->text();
 
@@ -478,7 +1040,8 @@ void DialogCreateProductPage::_runAiChatGpt()
       "}"
                      "]}'";
                      //*/
-        QString jsonPayload = R"({"model":"gpt-4-turbo",
+        //gpt-4-turbo
+        QString jsonPayload = R"({"model":"asst_TW5WLdGxRgrPQkufQrULDGBX",
                                  "messages":[
                                     {"role": "system",
                                      "content": "You are a Pinterest assistant, skilled in writing Pinterest pin descriptions including always the most searched keywords."
@@ -619,7 +1182,48 @@ void DialogCreateProductPage::publishPinterest()
         //const QString &clientId = ui->lineEditPinterestApiId->text();
         //const QString &clientSecret = ui->lineEditPinterestApiSecret->text();
         const QString &accessToken = ui->lineEditPinterestAccessToken->text();
+        QStringList curlArgs;
+        curlArgs << "-X" << "POST"
+                 << "-H" << "Content-Type: multipart/form-data"
+                 << "-F" << "access_token=" + accessToken;
 
+        // Ajouter les fichiers images à la commande curl
+        for (const QString &filePath : pinFilePaths) {
+            curlArgs << "-F" << "image=@" + filePath;
+        }
+
+        // Ajouter l'URL de l'API Pinterest à la commande curl
+        curlArgs << "https://api.pinterest.com/v5/pins/";
+
+        // Créer un processus pour exécuter la commande curl
+        QProcess *curlProcess = new QProcess();
+        curlProcess->setProgram("curl");
+        curlProcess->setArguments(curlArgs);
+
+        // Démarrer le processus curl
+        curlProcess->start();
+
+        // Attendre que le processus se termine
+        if (!curlProcess->waitForFinished()) {
+            qDebug() << "Erreur : Curl n'a pas pu se terminer correctement.";
+            return;
+        }
+
+        // Lire la sortie du processus curl
+        QByteArray output = curlProcess->readAllStandardOutput();
+        qDebug() << "Réponse de curl :" << output;
+
+        // Gérer la réponse de curl
+        if (curlProcess->exitCode() != 0) {
+            qDebug() << "Erreur lors de la planification de la publication sur Pinterest :" << curlProcess->errorString();
+        } else {
+            qDebug() << "Pinterest pinning done";
+        }
+
+        // Nettoyer
+        curlProcess->deleteLater();
+
+        /*
         // Créer un objet QHttpMultiPart pour les données multipart/form-data
         QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
 
@@ -661,6 +1265,7 @@ void DialogCreateProductPage::publishPinterest()
             }
             reply->deleteLater();
         });
+        //*/
     }
 }
 //----------------------------------------
@@ -678,6 +1283,12 @@ QStringList DialogCreateProductPage::_getFilesToPin() const
         pinFilePaths.takeLast();
     }
     return pinFilePaths;
+}
+
+QSharedPointer<QSettings> DialogCreateProductPage::settingsPage() const
+{
+    const QString &settingsPath = m_pagePath.absoluteFilePath(PageInfoList::SETTING_FILE_NAME);
+    return QSharedPointer<QSettings>(new QSettings(settingsPath, QSettings::IniFormat));
 }
 //----------------------------------------
 bool DialogCreateProductPage::_checkPinterestInfoFiled()
@@ -732,6 +1343,55 @@ void DialogCreateProductPage::planifyPinterest()
                     permalink, nPinsPerDay, timePinning);
         const QString &accessToken = ui->lineEditPinterestAccessToken->text();
 
+        // Convertir la date et l'heure de publication en format UNIX timestamp
+        qint64 publishTimestamp = dateTimePinning.toSecsSinceEpoch();
+
+        // Construire la commande curl
+        QStringList curlArgs;
+        curlArgs << "-X" << "POST"
+                 << "-H" << "Content-Type: multipart/form-data"
+                 << "-F" << "access_token=" + accessToken;
+
+        // Ajouter les fichiers images à la commande curl
+        for (const QString &filePath : pinFilePaths) {
+            curlArgs << "-F" << "image=@" + filePath;
+        }
+
+        // Ajouter la date et l'heure de publication à la commande curl
+        curlArgs << "-F" << "publish_at=" + QString::number(publishTimestamp);
+
+        // Ajouter l'URL de l'API Pinterest à la commande curl
+        curlArgs << "https://api.pinterest.com/v5/pins/";
+
+        // Créer un processus pour exécuter la commande curl
+        QProcess *curlProcess = new QProcess();
+        curlProcess->setProgram("curl");
+        curlProcess->setArguments(curlArgs);
+
+        // Démarrer le processus curl
+        curlProcess->start();
+
+        // Attendre que le processus se termine
+        if (!curlProcess->waitForFinished()) {
+            qDebug() << "Erreur : Curl n'a pas pu se terminer correctement.";
+            return;
+        }
+
+        // Lire la sortie du processus curl
+        QByteArray output = curlProcess->readAllStandardOutput();
+        qDebug() << "Réponse de curl :" << output;
+
+        // Gérer la réponse de curl
+        if (curlProcess->exitCode() != 0) {
+            qDebug() << "Erreur lors de la planification de la publication sur Pinterest :" << curlProcess->errorString();
+        } else {
+            qDebug() << "Publication planifiée sur Pinterest pour" << dateTimePinning.toString() << "!";
+        }
+
+        // Nettoyer
+        curlProcess->deleteLater();
+
+        /*
         // Créer un objet QHttpMultiPart pour les données multipart/form-data
         QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
 
@@ -782,6 +1442,7 @@ void DialogCreateProductPage::planifyPinterest()
             }
             reply->deleteLater();
         });
+        //*/
     }
 }
 //----------------------------------------

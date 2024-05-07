@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1042</width>
-    <height>990</height>
+    <width>1631</width>
+    <height>1187</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,12 +26,27 @@
        </property>
        <item>
         <property name="text">
-         <string>Run AI</string>
+         <string>Run Deep Image</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Informations</string>
+         <string>Run ChatGpt</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>AI Information</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Run FaceSwap</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Links</string>
         </property>
        </item>
        <item>
@@ -57,6 +72,12 @@
         <enum>Qt::Vertical</enum>
        </property>
        <widget class="QSplitter" name="splitter">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -68,6 +89,13 @@
              <widget class="QLabel" name="label">
               <property name="text">
                <string>Source</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonOpenParentFolder">
+              <property name="text">
+               <string>Open</string>
               </property>
              </widget>
             </item>
@@ -89,6 +117,13 @@
           <item>
            <widget class="QTreeView" name="treeViewFilesSource"/>
           </item>
+          <item>
+           <widget class="QLabel" name="labelPageImage">
+            <property name="text">
+             <string>IMAGE</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="layoutWidget">
@@ -98,7 +133,7 @@
             <item>
              <widget class="QLabel" name="label_2">
               <property name="text">
-               <string>Backup working folder</string>
+               <string>Page working folder</string>
               </property>
              </widget>
             </item>
@@ -106,6 +141,13 @@
              <widget class="QPushButton" name="buttonOpenPageFolder">
               <property name="text">
                <string>Open</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonCopyPageImagePath">
+              <property name="text">
+               <string>Copy image path</string>
               </property>
              </widget>
             </item>
@@ -125,15 +167,95 @@
            </layout>
           </item>
           <item>
-           <widget class="QTreeView" name="treeViewFilesPage"/>
+           <widget class="QTreeView" name="treeViewFilesPage">
+            <attribute name="headerDefaultSectionSize">
+             <number>300</number>
+            </attribute>
+           </widget>
           </item>
          </layout>
         </widget>
        </widget>
        <widget class="QStackedWidget" name="stackedWidget">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>5</verstretch>
+         </sizepolicy>
+        </property>
         <property name="currentIndex">
          <number>0</number>
         </property>
+        <widget class="QWidget" name="page01DeepImage">
+         <layout class="QVBoxLayout" name="verticalLayout_15">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_10">
+            <item>
+             <widget class="QPushButton" name="buttonCopyPathPagePath">
+              <property name="text">
+               <string>Copy page dir path</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonRemoveDeepImagePostNames">
+              <property name="text">
+               <string>Remove deep image post names</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="page02ChatGpt">
+         <layout class="QVBoxLayout" name="verticalLayout_16">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_11">
+            <item>
+             <widget class="QPushButton" name="buttonCopyFirstImagePath">
+              <property name="text">
+               <string>Copy first image path</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonCopyPrompt">
+              <property name="text">
+               <string>Copy prompt</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_9">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="pageAi">
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
@@ -177,6 +299,73 @@
              </widget>
             </item>
             <item>
+             <widget class="Line" name="line">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>Save</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonRecordPageTitle">
+              <property name="toolTip">
+               <string>Save title</string>
+              </property>
+              <property name="text">
+               <string>Title</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonRecordPageDesc">
+              <property name="toolTip">
+               <string>Save description</string>
+              </property>
+              <property name="text">
+               <string>Description</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonRecordMetaDesc">
+              <property name="toolTip">
+               <string>Save Meta Desc</string>
+              </property>
+              <property name="whatsThis">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Meta Desc</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonRecordPinterestTitle">
+              <property name="toolTip">
+               <string>Save Pinterest title</string>
+              </property>
+              <property name="text">
+               <string>Pinterest title</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonRecordPinterestDescription">
+              <property name="toolTip">
+               <string>Save Pinterest description</string>
+              </property>
+              <property name="text">
+               <string>Pinterest description</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <spacer name="horizontalSpacer_5">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -192,7 +381,235 @@
            </layout>
           </item>
           <item>
-           <widget class="QTextEdit" name="textEditChatGpt"/>
+           <widget class="QToolBox" name="toolBox">
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+            <widget class="QWidget" name="page">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>1387</width>
+               <height>680</height>
+              </rect>
+             </property>
+             <attribute name="label">
+              <string>Reply</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_18">
+              <item>
+               <widget class="QTextEdit" name="textEditChatGpt"/>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="page_2">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>1387</width>
+               <height>680</height>
+              </rect>
+             </property>
+             <attribute name="label">
+              <string>Informations</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_19">
+              <item>
+               <widget class="QLabel" name="label_15">
+                <property name="text">
+                 <string>Title</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="lineEditPageTitle"/>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_16">
+                <item>
+                 <widget class="QLabel" name="label_18">
+                  <property name="text">
+                   <string>Permalink</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="buttonCopyPermalink">
+                  <property name="text">
+                   <string>Copy</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_14">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="lineEditPermalink"/>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_16">
+                <property name="text">
+                 <string>Meta desc</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="lineEditPageMetaDesc"/>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_14">
+                <item>
+                 <widget class="QLabel" name="label_17">
+                  <property name="text">
+                   <string>Pin title</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="buttonCopyPinTitle">
+                  <property name="text">
+                   <string>Copy</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_12">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="lineEditPinTitle"/>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_15">
+                <item>
+                 <widget class="QLabel" name="label_20">
+                  <property name="text">
+                   <string>Pin description</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="buttonCopyPinDescription">
+                  <property name="text">
+                   <string>Copy</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_13">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QTextEdit" name="textEditPinDesc">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>100</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_19">
+                <property name="text">
+                 <string>Description</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTextEdit" name="textEditPageDesc"/>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="page04FaceSwap">
+         <layout class="QVBoxLayout" name="verticalLayout_17">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_13">
+            <item>
+             <widget class="QLineEdit" name="lineEditFaceSwapSource">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonBRowseFaceSwapSource">
+              <property name="text">
+               <string>Browse</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonCopyFaceSwapSource">
+              <property name="text">
+               <string>Copy</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonOpenFaceSwapSource">
+              <property name="text">
+               <string>Open folder</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_11">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -201,61 +618,129 @@
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_9">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_6">
-              <item>
-               <widget class="QPushButton" name="buttonCopyLink">
-                <property name="text">
-                 <string>Copy Link</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="buttonAddLinkImage">
-                <property name="text">
-                 <string>Add Images Link</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="buttonAddLinkReviews">
-                <property name="text">
-                 <string>Add Review Link</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="buttonRemoveLink">
-                <property name="text">
-                 <string>Remove Link</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_4">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <widget class="QTableView" name="tableViewPageInfos">
-              <property name="selectionBehavior">
-               <enum>QAbstractItemView::SelectRows</enum>
+             <widget class="QToolBox" name="toolBox_2">
+              <property name="currentIndex">
+               <number>0</number>
               </property>
-              <attribute name="horizontalHeaderStretchLastSection">
-               <bool>true</bool>
-              </attribute>
-              <attribute name="verticalHeaderStretchLastSection">
-               <bool>false</bool>
-              </attribute>
+              <widget class="QWidget" name="page_3">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>1385</width>
+                 <height>809</height>
+                </rect>
+               </property>
+               <attribute name="label">
+                <string>Links and informations</string>
+               </attribute>
+               <layout class="QVBoxLayout" name="verticalLayout_20">
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_6">
+                  <item>
+                   <widget class="QPushButton" name="buttonCopyLink">
+                    <property name="text">
+                     <string>Copy Link</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonAddLinkImage">
+                    <property name="text">
+                     <string>Add Images Link</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonAddLinkReviews">
+                    <property name="text">
+                     <string>Add Review Link</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonAddLinkPinterest">
+                    <property name="text">
+                     <string>Add pinterest link</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonRemoveLink">
+                    <property name="text">
+                     <string>Remove Link</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_4">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <widget class="QTableView" name="tableViewPageInfos">
+                  <property name="selectionBehavior">
+                   <enum>QAbstractItemView::SelectRows</enum>
+                  </property>
+                  <attribute name="horizontalHeaderStretchLastSection">
+                   <bool>true</bool>
+                  </attribute>
+                  <attribute name="verticalHeaderStretchLastSection">
+                   <bool>false</bool>
+                  </attribute>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="pageWebCJ">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>1385</width>
+                 <height>809</height>
+                </rect>
+               </property>
+               <attribute name="label">
+                <string>CJ website</string>
+               </attribute>
+               <layout class="QVBoxLayout" name="verticalLayout_21">
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_12">
+                  <item>
+                   <widget class="QPushButton" name="buttonCopyFirstImagePath_2">
+                    <property name="text">
+                     <string>Copy First Image Path</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_10">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
              </widget>
             </item>
            </layout>
@@ -267,22 +752,33 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_9">
             <item>
-             <widget class="QComboBox" name="comboBoxShoeSizeFrom"/>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_13">
+             <widget class="QPushButton" name="buttonFillPage">
+              <property name="toolTip">
+               <string>Fill page from current infromations</string>
+              </property>
               <property name="text">
-               <string>to</string>
+               <string>Fill</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="comboBoxShoeSizeTo"/>
+             <widget class="QPushButton" name="buttonCopyPageDescription">
+              <property name="text">
+               <string>Copy description</string>
+              </property>
+             </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="buttonCopySizeClothe_2">
+             <widget class="QPushButton" name="buttonCopyPageLink">
               <property name="text">
-               <string>Copy shoe size</string>
+               <string>Copy page link</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="Line" name="line_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
               </property>
              </widget>
             </item>
@@ -305,6 +801,26 @@
             </item>
             <item>
              <widget class="QComboBox" name="comboBoxClotheSizeTo"/>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonCopySizeShoe">
+              <property name="text">
+               <string>Copy shoe size</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboBoxShoeSizeFrom"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>to</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboBoxShoeSizeTo"/>
             </item>
             <item>
              <spacer name="horizontalSpacer_7">
@@ -349,8 +865,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>794</width>
-                 <height>569</height>
+                 <width>1383</width>
+                 <height>865</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_13">

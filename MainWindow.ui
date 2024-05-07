@@ -79,6 +79,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="buttonExportCsvPages">
+        <property name="text">
+         <string>Export Pages CSV</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="horizontalSpacer_7">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>

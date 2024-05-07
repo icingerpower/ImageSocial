@@ -30,6 +30,8 @@ public:
 
 public slots:
     void browseUrl();
+    void exportPagesCsv();
+
     void browseImageDirectory();
     void browseImageDirectoryToCrop();
     void generatePinterestVideos();
@@ -74,6 +76,7 @@ private:
     QGraphicsScene m_sceneToCrop;
     void _connectSlots();
     void _fillComboPageDirs();
+    QStringList _getBaseNames() const;
     void _addCurrentComboPageDir();
     void _setRectVisible(bool visible);
     bool _confirmPatternName();

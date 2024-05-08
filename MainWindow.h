@@ -31,6 +31,7 @@ public:
 public slots:
     void browseUrl();
     void exportPagesCsv();
+    void displayPinToDo();
 
     void browseImageDirectory();
     void browseImageDirectoryToCrop();

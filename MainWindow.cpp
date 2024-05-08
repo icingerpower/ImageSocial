@@ -1,4 +1,6 @@
 #include <QFileDialog>
+#include <QStringListModel>
+#include <QListView>
 #include <QProcess>
 #include <QMessageBox>
 #include <QFileSystemModel>
@@ -153,6 +155,40 @@ void MainWindow::exportPagesCsv()
             QTextStream stream(&file);
             stream << lines.join("\n");
             file.close();
+        }
+    }
+}
+//----------------------------------------
+void MainWindow::displayPinToDo()
+{
+    if (!ui->lineEditDirImages->text().isEmpty())
+    {
+        QDir dirImages = ui->lineEditDirImages->text();
+        QStringList pinsToDo = dirImages.entryList(
+                    QStringList{"*TO-PIN*"}, QDir::Files, QDir::Name);
+
+        QStringList baseNames = _getBaseNames();
+        std::sort(baseNames.begin(), baseNames.end());
+        for (const auto &baseName : baseNames)
+        {
+            QString pagePath = dirImages.filePath(baseName);
+            PageInfoList infoList(pagePath);
+            if (!infoList.hasPinLink())
+            {
+                pinsToDo << baseName;
+            }
+        }
+        if (pinsToDo.size() > 0)
+        {
+            QDialog dialog;
+            dialog.setWindowTitle("Pins to do");
+            QListView* listView = new QListView(&dialog);
+            QStringListModel* model = new QStringListModel(pinsToDo, listView);
+            listView->setModel(model);
+            QVBoxLayout* layout = new QVBoxLayout(&dialog);
+            layout->addWidget(listView);
+            dialog.setLayout(layout);
+            dialog.exec();
         }
     }
 }
@@ -942,6 +978,10 @@ void MainWindow::_connectSlots()
             &QPushButton::clicked,
             this,
             &MainWindow::exportPagesCsv);
+    connect(ui->buttonDisplayPinsToDo,
+            &QPushButton::clicked,
+            this,
+            &MainWindow::displayPinToDo);
 
     connect(ui->buttonBrowseDirImageToCrop,
             &QPushButton::clicked,

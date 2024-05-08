@@ -197,6 +197,18 @@ void PageInfoList::sortLinkNames(QStringList &linkNames)
     linkNames = linkNamesSorted;
 }
 //----------------------------------------
+bool PageInfoList::hasPinLink() const
+{
+    for (const auto &variantList : m_listOfVariantList)
+    {
+        if (variantList[IND_ID].toString() == ID_PIN_LINK)
+        {
+            return !variantList[IND_VALUE].toString().isEmpty();
+        }
+    }
+    return false;
+}
+//----------------------------------------
 QVariant PageInfoList::headerData(
     int section,
     Qt::Orientation orientation,
@@ -268,7 +280,13 @@ void PageInfoList::_loadFromSettings()
         QHash<QString, QVariantList> idToValues;
         for (const auto &variantList : listOfVariantList)
         {
-            idToValues[variantList[IND_ID].toString()] = variantList;
+            static QSet<QString> failedIds{ID_CJ_SOURCING_ID + "-1"
+                        , ID_CJ_SKU + "-1"
+                        , ID_CJ_LINK + "-1"
+                        , ID_PAGE_LINK + "-1"};
+            if (!failedIds.contains(variantList[IND_ID].toString())){
+                idToValues[variantList[IND_ID].toString()] = variantList;
+            }
         }
         for (auto &variantList : m_listOfVariantList)
         {

@@ -19,6 +19,7 @@ public:
     QString getLink(const QModelIndex &index) const;
     QHash<QString, QString> linksFilled() const;
     static void sortLinkNames(QStringList &linkNames);
+    bool hasPinLink() const;
 
     // Header:
     QVariant headerData(int section,

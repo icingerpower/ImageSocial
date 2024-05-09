@@ -88,6 +88,7 @@ private slots:
     void onImageSelectionChanged(
             const QItemSelection &selected,
             const QItemSelection &deselected);
+    void _updateRectPin();
 
 private:
     Ui::DialogCreateProductPage *ui;

@@ -178,9 +178,26 @@ void DialogCreateProductPage::_initGraphicsView()
     m_pixmapItem->setPos(0, 0);
     m_scene.addItem(m_pixmapItem);
     m_rectVertical = new ResizableRect(Qt::green);
-    int pinWidth = ui->graphicsView->width() / 2;
+    int pinWidth = ui->graphicsView->height() / 2;
     m_rectVertical->setRect(QRect(pinWidth/4, 0, pinWidth, ui->graphicsView->height()));
     m_scene.addItem(m_rectVertical);
+}
+//----------------------------------------
+void DialogCreateProductPage::_updateRectPin()
+{
+    int width = ui->spinBoxPinWidth->value();
+    int height = ui->spinBoxPinHeight->value();
+    int pixmapHeight = m_pixmapItem->boundingRect().height();
+    int pinWidth = pixmapHeight * width / float(height);
+    if (pinWidth % 2 != 0)
+    {
+        pinWidth += 1;
+    }
+    if (pixmapHeight % 2 != 0)
+    {
+        pixmapHeight -= 1;
+    }
+    m_rectVertical->setRect(QRect(pinWidth/4, 0, pinWidth, pixmapHeight));
 }
 //----------------------------------------
 void DialogCreateProductPage::_initSizing()
@@ -265,8 +282,7 @@ void DialogCreateProductPage::onImageSelectionChanged(
         pixmap = pixmap.scaledToHeight(height);
         m_pixmapItem->setPixmap(pixmap);
         m_pixmapItem->setPos(0, 0);
-        int pinWidth = height / 2;
-        m_rectVertical->setRect(QRect(height/4, 0, pinWidth, height));
+        _updateRectPin();
     } else if (selected.size() == 0
                && deselected.size() > 0) {
         m_pixmapItem->setPixmap(QPixmap());
@@ -485,6 +501,14 @@ void DialogCreateProductPage::_connectSlots()
             &QPushButton::clicked,
             this,
             &DialogCreateProductPage::planifyPinterest);
+    connect(ui->spinBoxPinWidth,
+            &QSpinBox::valueChanged,
+            this,
+            &DialogCreateProductPage::_updateRectPin);
+    connect(ui->spinBoxPinHeight,
+            &QSpinBox::valueChanged,
+            this,
+            &DialogCreateProductPage::_updateRectPin);
     connect(ui->lineEditDeepImageApitKey,
             &QLineEdit::textEdited,
             this,
@@ -1160,11 +1184,13 @@ void DialogCreateProductPage::cropPinterest()
 
 
         auto widthGraphicsImage = m_pixmapItem->boundingRect().width();
-        int xRect = m_rectVertical->boundingRect().left() + m_rectVertical->pos().x() - m_pixmapItem->boundingRect().left();
+        const auto &boundingRect = m_rectVertical->boundingRect();
+        double ratio = boundingRect.width() / boundingRect.height();
+        int xRect = boundingRect.left() + m_rectVertical->pos().x() - m_pixmapItem->boundingRect().left();
         double relX = 1. * xRect / widthGraphicsImage;
         int left = relX * height + 0.5;
         rect.setLeft(left);
-        rect.setRight(left + height/2);
+        rect.setRight(left + height * ratio);
         image = image.copy(rect);
         image.save(newFilePath);
     }

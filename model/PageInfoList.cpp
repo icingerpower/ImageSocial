@@ -201,7 +201,7 @@ bool PageInfoList::hasPinLink() const
 {
     for (const auto &variantList : m_listOfVariantList)
     {
-        if (variantList[IND_ID].toString() == ID_PIN_LINK)
+        if (variantList[IND_ID].toString().startsWith(ID_PIN_LINK))
         {
             return !variantList[IND_VALUE].toString().isEmpty();
         }

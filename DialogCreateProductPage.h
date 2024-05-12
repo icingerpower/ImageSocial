@@ -39,6 +39,7 @@ public slots:
     // Tab 02 ChatGpt
     void copyFirstImagePath();
     void copyPrompt();
+    void copyPromptAmazon();
 
     // Tab 03 AI
     void runAi();

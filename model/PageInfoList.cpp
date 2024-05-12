@@ -24,6 +24,8 @@ const QString PageInfoList::ID_PIN_LINK{"pin-link"};
 const QString PageInfoList::NAME_PIN_LINK{"Pin Link"};
 const QString PageInfoList::ID_PAGE_LINK{"page-link"};
 const QString PageInfoList::NAME_PAGE_LINK{"Page Link"};
+const QString PageInfoList::ID_EXTRA_INFOS{"id-extra-infos"};
+const QString PageInfoList::NAME_EXTRA_INFOS{"Extra infos"};
 
 //----------------------------------------
 PageInfoList::PageInfoList(const QString &pagePath, QObject *parent)
@@ -33,11 +35,12 @@ PageInfoList::PageInfoList(const QString &pagePath, QObject *parent)
     m_listOfVariantList << QVariantList{QString{}, NAME_SOURCING_LINK, ID_SOURCING_LINK};
     m_listOfVariantList << QVariantList{QString{}, NAME_PHOTO_LINK, ID_PHOTO_LINK + "-1"};
     m_listOfVariantList << QVariantList{QString{}, NAME_REVIEW_LINK, ID_REVIEW_LINK + "-1"};
-    m_listOfVariantList << QVariantList{QString{}, NAME_CJ_SOURCING_ID, ID_CJ_SOURCING_ID}; //
-    m_listOfVariantList << QVariantList{QString{}, NAME_CJ_SKU, ID_CJ_SKU}; //
-    m_listOfVariantList << QVariantList{QString{}, NAME_CJ_LINK, ID_CJ_LINK}; //
+    m_listOfVariantList << QVariantList{QString{}, NAME_CJ_SOURCING_ID, ID_CJ_SOURCING_ID};
+    m_listOfVariantList << QVariantList{QString{}, NAME_CJ_SKU, ID_CJ_SKU};
+    m_listOfVariantList << QVariantList{QString{}, NAME_CJ_LINK, ID_CJ_LINK};
     m_listOfVariantList << QVariantList{QString{}, NAME_PIN_LINK, ID_PIN_LINK + "-1"};
-    m_listOfVariantList << QVariantList{QString{}, NAME_PAGE_LINK, ID_PAGE_LINK}; //
+    m_listOfVariantList << QVariantList{QString{}, NAME_PAGE_LINK, ID_PAGE_LINK};
+    m_listOfVariantList << QVariantList{QString{}, NAME_EXTRA_INFOS, ID_EXTRA_INFOS};
     _loadFromSettings();
 }
 //----------------------------------------
@@ -207,6 +210,18 @@ bool PageInfoList::hasPinLink() const
         }
     }
     return false;
+}
+//----------------------------------------
+QString PageInfoList::getInfoExtra() const
+{
+    for (const auto &variantList : m_listOfVariantList)
+    {
+        if (variantList[IND_ID].toString().startsWith(ID_EXTRA_INFOS))
+        {
+            return variantList[IND_VALUE].toString();
+        }
+    }
+    return QString{};
 }
 //----------------------------------------
 QVariant PageInfoList::headerData(

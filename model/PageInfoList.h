@@ -20,6 +20,7 @@ public:
     QHash<QString, QString> linksFilled() const;
     static void sortLinkNames(QStringList &linkNames);
     bool hasPinLink() const;
+    QString getInfoExtra() const;
 
     // Header:
     QVariant headerData(int section,
@@ -60,6 +61,8 @@ private:
     static const QString NAME_PIN_LINK;
     static const QString ID_PAGE_LINK;
     static const QString NAME_PAGE_LINK;
+    static const QString ID_EXTRA_INFOS;
+    static const QString NAME_EXTRA_INFOS;
 };
 
 #endif // PAGEINFOLIST_H

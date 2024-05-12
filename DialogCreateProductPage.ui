@@ -184,7 +184,7 @@
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>6</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="page01DeepImage">
          <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -236,6 +236,13 @@
              <widget class="QPushButton" name="buttonCopyPrompt">
               <property name="text">
                <string>Copy prompt</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonCopyPromptAmazon">
+              <property name="text">
+               <string>Copy prompt amazon</string>
               </property>
              </widget>
             </item>

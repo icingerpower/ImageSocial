@@ -323,6 +323,10 @@ void DialogCreateProductPage::_connectSlots()
             &QPushButton::clicked,
             this,
             &DialogCreateProductPage::copyPrompt);
+    connect(ui->buttonCopyPromptAmazon,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::copyPromptAmazon);
 
     // Tab 03 ai
     connect(ui->buttonRunAis,
@@ -692,7 +696,7 @@ void DialogCreateProductPage::copyPrompt()
 {
     auto clipboard = QApplication::clipboard();
     QString prompt = R"(
-Please provide a product description for this clothe that you can see on the image.
+Please provide a product description for this product that you can see on the image.
 - The product description should have at least 200 words.
 - The product description should use simple phrases that are easy to translate.
 - Use word that raise confidence and perceived value.
@@ -703,7 +707,50 @@ Please provide a product description for this clothe that you can see on the ima
 3) Then suggest a short google meta description that says that we ship world wide and that the first article is satisfied or refunded without return needed
 4) Then suggest a 3 pinterest pin titles + 1 description that includes keywords people may use to search such product (as you have been trained, without hashtags, and adding as much relevant keywords as possible).
 )";
+    auto model = static_cast<PageInfoList *>(ui->tableViewPageInfos->model());
+    const QString &extraInfos = model->getInfoExtra();
+    if (!extraInfos.isEmpty())
+    {
+        QStringList promptElements = prompt.split(".");
+        promptElements[0] += " (";
+        promptElements[0] += extraInfos;
+        promptElements[0] += ")";
+        prompt = promptElements.join(".");
+    }
     clipboard->setText(prompt);
+}
+//----------------------------------------
+void DialogCreateProductPage::copyPromptAmazon()
+{
+    auto clipboard = QApplication::clipboard();
+    QString prompt = R"(
+For this product that you can see on the image, please provide different kind of titles and descriptions as instructed below.
+- Use simple phrases that are easy to translate.
+- Use word that raise confidence and perceived value.
+- Always use as much keywords people may use to search such product (using your training document)
+
+1) Suggest 5 product titles that start with a woman name and then optimized with keywords
+2) Suggest a description of at least 200 words
+- The first paragraph should connect with the reader and mention the occasion that the clothe can be used.
+- In the description, please prevent most objections the buyer could have (except regarding shipping time as we don’t ship fast). Among the sale argument, we offer free return and free size exchange.
+- The last phrase should be a call-to-action that invite to buy
+3) Then suggest a short google meta description that says that we ship world wide and that the first article is satisfied or refunded without return needed
+4) Then suggest a 3 pinterest pin titles + 1 description that includes keywords people may use to search such product (without hashtags, and adding as much relevant keywords as possible).
+5) Then write an amazon product page description of at least 10 words that focus in giving product details and in preventing most objections the buyer could have.
+6) Then write 5 amazon bullets points that focus in giving product details and in preventing most objections the buyer could have.
+)";
+    auto model = static_cast<PageInfoList *>(ui->tableViewPageInfos->model());
+    const QString &extraInfos = model->getInfoExtra();
+    if (!extraInfos.isEmpty())
+    {
+        QStringList promptElements = prompt.split(",");
+        promptElements[0] += " (";
+        promptElements[0] += extraInfos;
+        promptElements[0] += ")";
+        prompt = promptElements.join(",");
+    }
+    clipboard->setText(prompt);
+
 }
 //----------------------------------------
 void DialogCreateProductPage::copySelImagePath()

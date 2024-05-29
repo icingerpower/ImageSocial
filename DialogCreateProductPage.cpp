@@ -75,7 +75,7 @@ QString DialogCreateProductPage::getPermalink() const
 {
     QString permalink = ui->lineEditPageTitle->text();
     permalink.replace("\"", "");
-    permalink.replace("\'", "");
+    permalink.replace("'", "");
     permalink.replace(" ", "-");
     return permalink.toLower();
 }

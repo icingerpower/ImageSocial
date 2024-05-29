@@ -553,7 +553,7 @@ void MainWindow::cropSquareFillingBlank()
         _setRectVisible(false);
         QPixmap pixmap;
         if (ui->tabWeb->isVisible()) {
-            QRectF rectScenteF = m_rectSquare->sceneBoundingRect();
+            QRectF rectScenteF = m_rectPinterest->sceneBoundingRect();
             pixmap = m_webView->grab(rectScenteF.toRect());
         } else {
             QRectF rectScenteF = m_rectSquareToCrop->sceneBoundingRect();

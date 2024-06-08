@@ -415,8 +415,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>200</width>
-               <height>432</height>
+               <width>1387</width>
+               <height>680</height>
               </rect>
              </property>
              <attribute name="label">
@@ -673,6 +673,13 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="QPushButton" name="buttonAddLinkCj">
+                    <property name="text">
+                     <string>Add Cj Link</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <widget class="QPushButton" name="buttonRemoveLink">
                     <property name="text">
                      <string>Remove Link</string>
@@ -714,8 +721,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>162</width>
-                 <height>43</height>
+                 <width>1385</width>
+                 <height>809</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -872,8 +879,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1383</width>
-                 <height>865</height>
+                 <width>534</width>
+                 <height>119</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_13">

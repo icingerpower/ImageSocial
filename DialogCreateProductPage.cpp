@@ -215,6 +215,7 @@ void DialogCreateProductPage::_initSizing()
         , "US-11 | UK/AU-9 | EU-44"
         , "US-12 | UK/AU-10 | EU-45"
         , "US-13 | UK/AU-11 | EU-46"
+        , "US-14 | UK/AU-12 | EU-47"
     };
     ui->comboBoxShoeSizeFrom->addItems(sizesShoe);
     ui->comboBoxShoeSizeTo->addItems(sizesShoe);
@@ -454,6 +455,10 @@ void DialogCreateProductPage::_connectSlots()
             &QPushButton::clicked,
             this,
             &DialogCreateProductPage::addLinkPinterest);
+    connect(ui->buttonAddLinkCj,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::addLinkCj);
     connect(ui->buttonRemoveLink,
             &QPushButton::clicked,
             this,
@@ -829,6 +834,12 @@ void DialogCreateProductPage::addLinkPinterest()
 {
     auto model = static_cast<PageInfoList *>(ui->tableViewPageInfos->model());
     model->addLinkPin();
+}
+//----------------------------------------
+void DialogCreateProductPage::addLinkCj()
+{
+    auto model = static_cast<PageInfoList *>(ui->tableViewPageInfos->model());
+    model->addLinkCj();
 }
 //----------------------------------------
 void DialogCreateProductPage::removeLink()

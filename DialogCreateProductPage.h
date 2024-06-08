@@ -64,6 +64,7 @@ public slots:
     void addLinkPhotos();
     void addLinkReviews();
     void addLinkPinterest();
+    void addLinkCj();
     void removeLink();
 
     // Tab 06 edit page

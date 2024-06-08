@@ -14,6 +14,7 @@ public:
     void addLinkReviews();
     void addLinkPhotos();
     void addLinkPin();
+    void addLinkCj();
     void setPageLink(const QString &pageLink);
     void remove(const QModelIndex &index);
     QString getLink(const QModelIndex &index) const;

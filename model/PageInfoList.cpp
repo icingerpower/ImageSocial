@@ -116,6 +116,30 @@ void PageInfoList::addLinkPin()
     endInsertRows();
 }
 //----------------------------------------
+void PageInfoList::addLinkCj()
+{
+    QSet<QString> cjIds;
+    for (const auto &variantList : m_listOfVariantList)
+    {
+        QString id = variantList[IND_ID].toString();
+        if (id.startsWith(ID_CJ_LINK))
+        {
+            cjIds << id;
+        }
+    }
+    int i = 2;
+    QString id = ID_CJ_LINK + "-2";
+    while (cjIds.contains(id))
+    {
+        ++i;
+        id = ID_CJ_LINK + "-" + QString::number(i);
+    }
+    beginInsertRows(QModelIndex{}, m_listOfVariantList.size(), m_listOfVariantList.size());
+    m_listOfVariantList << QVariantList{QString{}, NAME_CJ_LINK + " " + QString::number(i), id};
+    _saveInSettings();
+    endInsertRows();
+}
+//----------------------------------------
 void PageInfoList::setPageLink(const QString &pageLink)
 {
     // TODO set page link + fix face swap image selection

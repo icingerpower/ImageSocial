@@ -61,6 +61,10 @@ DialogCreateProductPage::DialogCreateProductPage(
     ui->listViewPinteresPlanned->setModel(PlannifyListModel::instance());
     _initSizing();
     _loadSettings();
+    if (!ui->textEditChatGpt->toPlainText().trimmed().isEmpty())
+    {
+        ui->toolBox->setCurrentIndex(1);
+    }
     _connectSlots();
     m_aiWasRun = false;
 }
@@ -203,7 +207,8 @@ void DialogCreateProductPage::_updateRectPin()
 void DialogCreateProductPage::_initSizing()
 {
     QStringList sizesShoe{
-        "US-4 | UK/AU-2 | EU-35"
+        "US-3 | UK/AU-1 | EU-34"
+        , "US-4 | UK/AU-2 | EU-35"
         , "US-5 | UK/AU-3 | EU-36"
         , "US-6 | UK/AU-4 | EU-37"
         , "US-7 | UK/AU-5 | EU-38"
@@ -710,7 +715,8 @@ Please provide a product description for this product that you can see on the im
 - We only sell the clothe so don’t make the buyer believe he will also receive the accessories
 2) Once that you are done with description, please suggest 5 unique product names, with a woman name.
 3) Then suggest a short google meta description that says that we ship world wide and that the first article is satisfied or refunded without return needed
-4) Then suggest a 3 pinterest pin titles + 1 description that includes keywords people may use to search such product (as you have been trained, without hashtags, and adding as much relevant keywords as possible).
+4) Then suggest a 3 pinterest pin titles + 1 description that includes keywords people may use to search such product. Add as much keywords as possible only in a natural way using natural phrases.
+Don't use hashtags. Don't mention return policy. Don't mention sizing.
 )";
     auto model = static_cast<PageInfoList *>(ui->tableViewPageInfos->model());
     const QString &extraInfos = model->getInfoExtra();
@@ -740,7 +746,8 @@ For this product that you can see on the image, please provide different kind of
 - In the description, please prevent most objections the buyer could have (except regarding shipping time as we don’t ship fast). Among the sale argument, we offer free return and free size exchange.
 - The last phrase should be a call-to-action that invite to buy
 3) Then suggest a short google meta description that says that we ship world wide and that the first article is satisfied or refunded without return needed
-4) Then suggest a 3 pinterest pin titles + 1 description that includes keywords people may use to search such product (without hashtags, and adding as much relevant keywords as possible).
+4) Then suggest a one pinterest pin title + 1 description that includes keywords people may use to search such product. Add as much keywords as possible only in a natural way using natural phrases.
+Don't use hashtags. Don't mention return policy. Don't mention sizing.
 5) Then write an amazon product page description of at least 10 words that focus in giving product details and in preventing most objections the buyer could have.
 6) Then write 5 amazon bullets points that focus in giving product details and in preventing most objections the buyer could have.
 )";

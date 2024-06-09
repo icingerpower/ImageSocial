@@ -165,7 +165,7 @@ void MainWindow::displayPinToDo()
     {
         QDir dirImages = ui->lineEditDirImages->text();
         QStringList pinsToDo = dirImages.entryList(
-                    QStringList{"*TO-PIN*"}, QDir::Files, QDir::Name);
+                    QStringList{"*.mp4", "*.avi"}, QDir::Files, QDir::Name);
 
         QStringList baseNames = _getBaseNames();
         std::sort(baseNames.begin(), baseNames.end());

@@ -78,6 +78,7 @@ public slots:
     void cropAll();
     void cropPinterest();
     void cropGoogleImageAds();
+    void cropPinterestAddingWhite();
 
     // Tab pinterest
     void publishPinterest();

@@ -397,8 +397,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1387</width>
-               <height>680</height>
+               <width>98</width>
+               <height>88</height>
               </rect>
              </property>
              <attribute name="label">
@@ -415,8 +415,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1387</width>
-               <height>680</height>
+               <width>200</width>
+               <height>432</height>
               </rect>
              </property>
              <attribute name="label">
@@ -634,8 +634,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1385</width>
-                 <height>809</height>
+                 <width>622</width>
+                 <height>119</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -721,8 +721,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1385</width>
-                 <height>809</height>
+                 <width>162</width>
+                 <height>43</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -879,8 +879,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>534</width>
-                 <height>119</height>
+                 <width>1383</width>
+                 <height>865</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -897,6 +897,13 @@
                    <widget class="QPushButton" name="buttonCropPinterest">
                     <property name="text">
                      <string>Crop Pinterest</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonCropPinterestAddingWhite">
+                    <property name="text">
+                     <string>Crop Pinterest Adding White</string>
                     </property>
                    </widget>
                   </item>

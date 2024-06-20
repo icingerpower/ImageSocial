@@ -503,6 +503,10 @@ void DialogCreateProductPage::_connectSlots()
             &QPushButton::clicked,
             this,
             &DialogCreateProductPage::cropPinterest);
+    connect(ui->buttonCropPinterestAddingWhite,
+            &QPushButton::clicked,
+            this,
+            &DialogCreateProductPage::cropPinterestAddingWhite);
     connect(ui->buttonCropGoogleAds,
             &QPushButton::clicked,
             this,
@@ -1263,6 +1267,46 @@ void DialogCreateProductPage::cropPinterest()
 //----------------------------------------
 void DialogCreateProductPage::cropGoogleImageAds()
 {
+}
+//----------------------------------------
+void DialogCreateProductPage::cropPinterestAddingWhite()
+{
+    const auto &selIndexes = ui->treeViewFilesPage->selectionModel()->selectedIndexes();
+    if (selIndexes.size() > 0)
+    {
+        QString imageFileName = selIndexes.first().data().toString();
+        QString imageFilePath = m_pagePath.filePath(imageFileName);
+        QStringList elements = imageFileName.split("-");
+        elements.insert(elements.size()-1, "PINTEREST");
+        const QString &newFilePath = m_pagePath.filePath(elements.join("-"));
+        QImage image(imageFilePath);
+        QRect rect(image.rect());
+        int height = rect.height();
+
+        auto widthGraphicsImage = m_pixmapItem->boundingRect().width();
+        const auto &boundingRect = m_rectVertical->boundingRect();
+        double ratio = boundingRect.width() / boundingRect.height();
+        int xRect = boundingRect.left() + m_rectVertical->pos().x() - m_pixmapItem->boundingRect().left();
+        double relX = 1. * xRect / widthGraphicsImage;
+        int left = relX * height + 0.5;
+        rect.setLeft(left);
+        rect.setRight(left + height * ratio);
+        image = image.copy(rect);
+        if (ratio > 0.5001)
+        {
+            QPixmap resizedPixmap(image.width(), image.width() * 2);
+            QPainter painter(&resizedPixmap);
+            resizedPixmap.fill(Qt::white);
+            int x = (resizedPixmap.width() - image.width()) / 2;
+            int y = (resizedPixmap.height() - image.height()) / 2;
+            painter.drawImage(x, y, image);
+            resizedPixmap.save(newFilePath);
+        }
+        else
+        {
+            image.save(newFilePath);
+        }
+    }
 }
 //----------------------------------------
 void DialogCreateProductPage::publishPinterest()
